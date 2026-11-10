@@ -19,4 +19,4 @@ COPY . .
 EXPOSE 3000
 
 # Команда запуска API
-CMD ["npm", "run", "dev", "--workspace=apps/api"]
+CMD ["sh", "-c", "npx drizzle-kit migrate && npm run dev --workspace=apps/api"]
