@@ -6,11 +6,14 @@ COPY packages/db/package.json ./packages/db/
 COPY apps/web/package.json ./apps/web/
 RUN npm ci
 COPY . .
-# Передаем API URL для Next.js (в продакшене изменим на публичный)
-ENV NEXT_PUBLIC_API_URL=http://localhost:3000
+
+# Принимаем переменную из Dockhost при сборке
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 RUN npm run build --workspace=apps/web
 
-# Этап 2: Запуск (берем только нужные файлы)
+# Этап 2: Запуск
 FROM node:20-alpine AS runner
 WORKDIR /app
 COPY --from=builder /app/apps/web/public ./apps/web/public
