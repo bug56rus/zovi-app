@@ -7,9 +7,8 @@ COPY apps/web/package.json ./apps/web/
 RUN npm ci
 COPY . .
 
-# Принимаем переменную из Dockhost при сборке
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# ЖЕЛЕЗОБЕТОННЫЙ МЕТОД: принудительно создаем файл с правильным адресом API
+RUN echo "NEXT_PUBLIC_API_URL=https://hi2u-yby5-3ig7.gw-1a.dockhost.net" > apps/web/.env.production
 
 RUN npm run build --workspace=apps/web
 
