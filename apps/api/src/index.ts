@@ -9,7 +9,10 @@ import crypto from 'crypto';
 dotenv.config();
 
 const app = Fastify({ logger: true });
-app.register(cors, { origin: true, credentials: true });
+app.register(cors, { 
+  origin: 'https://bsbt-d92r-y79f.gw-1a.dockhost.net', 
+  credentials: true 
+});
 app.register(cookie); // Подключаем cookie
 
 // Генератор коротких токенов (8 символов)
