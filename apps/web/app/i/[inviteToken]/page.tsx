@@ -1,4 +1,5 @@
 import RsvpButtons from './RsvpButtons';
+import type { Metadata, ResolvingMetadata } from 'next';
 
 async function getEventData(inviteToken: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/i/${inviteToken}`, {
@@ -8,11 +9,41 @@ async function getEventData(inviteToken: string) {
   return res.json();
 }
 
-export default async function InvitePage({ params }: { params: Promise<{ inviteToken: string }> }) {
+type Props = {
+  params: Promise<{ inviteToken: string }>
+};
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const { inviteToken } = await params;
+  const cleanToken = inviteToken.split(/[^a-zA-Z0-9]/)[0];
+  const data = await getEventData(cleanToken);
+
+  if (!data) {
+    return { title: 'Приглашение не найдено | Зови' };
+  }
+
+  const { event } = data;
+  const formattedDate = new Date(event.dateTime).toLocaleString('ru-RU');
+
+  return {
+    title: `${event.title} — Приглашение | Зови`,
+    description: `📅 ${formattedDate}${event.location ? ` · 📍 ${event.location}` : ''}. Подтвердите участие!`,
+    openGraph: {
+      title: event.title,
+      description: `Приглашение на мероприятие. Ждем вас!`,
+      type: 'website',
+      siteName: 'Зови',
+      images: ['/og-image.png'],
+    },
+  };
+}
+
+export default async function InvitePage({ params }: Props) {
   const { inviteToken } = await params;
   
-  // МАГИЯ: берем только первую часть токена (до пробела или спецсимвола), 
-  // чтобы страница не ломалась, если скопировать текст вместе со ссылкой.
   const cleanToken = inviteToken.split(/[^a-zA-Z0-9]/)[0]; 
   
   const data = await getEventData(cleanToken);
