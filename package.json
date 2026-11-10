@@ -1,0 +1,9 @@
+{
+  "name": "event-app",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "db:generate": "npm run db:generate --workspace=packages/db"
+  }
+}
