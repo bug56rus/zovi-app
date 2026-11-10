@@ -7,6 +7,6 @@ export default defineConfig({
   schema: './packages/db/src/schema.ts',
   out: './packages/db/migrations',
   dbCredentials: {
-    url: process.env.DATABASE_URL || 'postgresql://postgres:dev@localhost:5432/eventapp',
+    url: process.env.DATABASE_URL as string,
   },
 });
