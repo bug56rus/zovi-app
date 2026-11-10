@@ -12,7 +12,7 @@ export default function CreateEventPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:3000/events', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
@@ -20,10 +20,7 @@ export default function CreateEventPage() {
       
       if (res.ok) {
         const data = await res.json();
-        // Сохраняем adminToken и данные события в localStorage
         localStorage.setItem(`admin_token_${data.event.id}`, data.adminToken);
-        
-        // Переходим на страницу управления событием
         router.push(`/admin/${data.event.id}`);
       } else {
         alert('Ошибка при создании события');

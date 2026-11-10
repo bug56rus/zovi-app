@@ -11,7 +11,6 @@ export default function EventDashboard() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
 
-  // Загружаем данные события и список инвайтов
   const fetchEventData = async () => {
     const adminToken = localStorage.getItem(`admin_token_${eventId}`);
     if (!adminToken) {
@@ -21,7 +20,7 @@ export default function EventDashboard() {
     }
 
     try {
-      const res = await fetch(`http://127.0.0.1:3000/events/${eventId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${eventId}`, {
         headers: { 'X-Admin-Token': adminToken }
       });
       if (res.ok) {
@@ -40,12 +39,11 @@ export default function EventDashboard() {
     fetchEventData();
   }, [eventId]);
 
-  // Генерация новой ссылки
   const generateInvite = async () => {
     setGenerating(true);
     const adminToken = localStorage.getItem(`admin_token_${eventId}`);
     try {
-      const res = await fetch(`http://127.0.0.1:3000/events/${eventId}/invites`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${eventId}/invites`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -54,7 +52,7 @@ export default function EventDashboard() {
         body: JSON.stringify({ count: 1 })
       });
       if (res.ok) {
-        await fetchEventData(); // Обновляем список
+        await fetchEventData();
       }
     } catch (e) {
       alert('Ошибка при создании ссылки');
@@ -62,7 +60,6 @@ export default function EventDashboard() {
     setGenerating(false);
   };
 
-  // Системное меню "Поделиться" (Safari, iOS, Android)
   const shareInvite = async (inviteToken: string) => {
     const url = `${window.location.origin}/i/${inviteToken}`;
     const text = `Приглашаю тебя на «${data.event.title}»! Подтверди участие по ссылке:`;
@@ -79,7 +76,6 @@ export default function EventDashboard() {
     }
   };
 
-  // Копирование ТОЛЬКО чистой ссылки
   const copyLink = (inviteToken: string) => {
     const url = `${window.location.origin}/i/${inviteToken}`;
     navigator.clipboard.writeText(url);
@@ -98,14 +94,12 @@ export default function EventDashboard() {
   return (
     <main style={{ padding: 20, fontFamily: 'sans-serif', maxWidth: 600, margin: '0 auto' }}>
       
-      {/* Шапка */}
       <div style={{ marginBottom: 30 }}>
         <h1 style={{ marginBottom: 5 }}>{event.title}</h1>
         <p style={{ color: '#666', margin: 0 }}>📅 {new Date(event.dateTime).toLocaleString('ru-RU')}</p>
         <p style={{ color: '#666', margin: '5px 0 0 0', fontSize: 14 }}>📍 {event.location || 'Место не указано'}</p>
       </div>
 
-      {/* Статистика */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 30 }}>
         <div style={{ flex: 1, background: '#dcfce7', padding: 15, borderRadius: 12, textAlign: 'center' }}>
           <div style={{ fontSize: 24, fontWeight: 'bold', color: '#166534' }}>{goingCount}</div>
@@ -121,14 +115,12 @@ export default function EventDashboard() {
         </div>
       </div>
 
-      {/* Кнопка создания инвайта */}
       <button 
         onClick={generateInvite} disabled={generating}
         style={{ width: '100%', padding: 15, background: '#3b82f6', color: 'white', border: 'none', borderRadius: 8, fontSize: 16, cursor: 'pointer', marginBottom: 30, opacity: generating ? 0.7 : 1 }}>
         {generating ? 'Создаем...' : '+ Создать новую ссылку-приглашение'}
       </button>
 
-      {/* Список приглашений */}
       <h3>Ваши приглашения ({invites.length}):</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {invites.map((invite: any, index: number) => {
