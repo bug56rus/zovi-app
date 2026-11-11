@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import './globals.css'; // Если у вас есть этот файл
+import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Зови | Приглашения на мероприятия',
@@ -9,6 +9,12 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: 'default',
     title: 'Зови',
+  },
+  // 👇 ДОБАВЛЯЕМ ЭТОТ БЛОК
+  icons: {
+    icon: '/icon-192x192.png',
+    shortcut: '/icon-192x192.png',
+    apple: '/icon-192x192.png',
   },
 };
 
