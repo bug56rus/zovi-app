@@ -1,104 +1,155 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-// 👇 ИСПРАВЛЯЕМ ПУТИ: добавляем еще одну точку и слэш
-import { playClick } from '../../utils/sound'; 
-import { useTheme } from '../../context/ThemeContext'; 
+import { useParams, useRouter } from 'next/navigation'; // 👈 ДОБАВЛЕН useRouter
+import { playClick } from '../../utils/sound';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function EventDashboard() {
-  const router = useRouter();
-  const { theme } = useTheme(); // Получаем текущую тему для отправки гостю
-  const [loading, setLoading] = useState(false);
-  
-  // В форме больше нет templateId, так как он берется из theme
-  const [form, setForm] = useState({ 
-    title: '', 
-    dateTime: '', 
-    location: '', 
-    description: '' 
-  });
+  const { eventId } = useParams();
+  const router = useRouter(); // Теперь он найден
+  const { theme } = useTheme();
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    playClick();
-    setLoading(true);
+  const fetchEventData = async () => {
+    const adminToken = localStorage.getItem(`admin_token_${eventId}`);
+    if (!adminToken) { 
+      setError('Нет доступа'); 
+      setLoading(false); 
+      return; 
+    }
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // Автоматически передаем текущую тему в templateId
-        body: JSON.stringify({ ...form, templateId: theme })
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${eventId}`, { 
+        headers: { 'X-Admin-Token': adminToken },
+        cache: 'no-store' // 👈 Чтобы данные всегда были свежими
       });
-      
-      if (res.ok) {
-        const data = await res.json();
-        localStorage.setItem(`admin_token_${data.event.id}`, data.adminToken);
-        router.push(`/admin/${data.event.id}`);
-      } else {
-        alert('Ошибка при создании события');
-      }
-    } catch (error) {
-      alert('Ошибка сети');
+      if (res.ok) setData(await res.json());
+      else setError('Ошибка данных');
+    } catch (e) { 
+      setError('Ошибка сети'); 
     }
     setLoading(false);
   };
 
-  // Стили страницы создания в зависимости от темы
-  const styles = {
-    classic: { 
-      bg: "bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white", 
-      card: "bg-white/10 border-white/20", 
-      input: "bg-black/20 border-white/10 text-white placeholder-gray-500 focus:border-white/40", 
-      btn: "bg-white text-black" 
-    },
-    light: { 
-      bg: "bg-gradient-to-br from-gray-50 to-gray-200 text-gray-900", 
-      card: "bg-white/70 border-white shadow-xl", 
-      input: "bg-gray-100 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-400", 
-      btn: "bg-blue-600 text-white" 
-    },
-    kids: { 
-      bg: "bg-gradient-to-br from-yellow-200 via-pink-200 to-indigo-200 text-indigo-900", 
-      card: "bg-white/60 border-4 border-white shadow-xl rounded-[2.5rem]", 
-      input: "bg-white/50 border-indigo-200 text-indigo-900 placeholder-indigo-300 focus:border-indigo-400", 
-      btn: "bg-indigo-500 text-white rounded-full" 
+  useEffect(() => { 
+    fetchEventData(); 
+  }, [eventId]);
+
+  const generateInvite = async () => {
+    playClick(); 
+    setGenerating(true);
+    const adminToken = localStorage.getItem(`admin_token_${eventId}`);
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${eventId}/invites`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken as string }, 
+        body: JSON.stringify({ count: 1 }) 
+      });
+      await fetchEventData(); 
+    } catch (e) { 
+      alert('Ошибка при создании ссылки'); 
+    }
+    setGenerating(false);
+  };
+
+  const deleteInvite = async (inviteId: string) => {
+    if (!confirm('Удалить?')) return;
+    playClick();
+    const adminToken = localStorage.getItem(`admin_token_${eventId}`);
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${eventId}/invites/${inviteId}`, { 
+        method: 'DELETE', 
+        headers: { 'X-Admin-Token': adminToken as string } 
+      });
+      await fetchEventData();
+    } catch (e) { 
+      alert('Ошибка при удалении'); 
     }
   };
 
-  const s = styles[theme] || styles.kids;
+  const shareInvite = async (inviteToken: string) => {
+    playClick();
+    const url = `${window.location.origin}/i/${inviteToken}`;
+    const text = `Приглашаю тебя на «${data.event.title}»! Подтверди участие:`;
+    if (navigator.share) { 
+      try { await navigator.share({ title: data.event.title, text, url }); } catch (err) {} 
+    } else { 
+      navigator.clipboard.writeText(url); 
+      alert('Скопировано!'); 
+    }
+  };
+
+  const copyLink = (inviteToken: string) => {
+    playClick(); 
+    navigator.clipboard.writeText(`${window.location.origin}/i/${inviteToken}`); 
+    alert('Скопировано!');
+  };
+
+  // Стили для разных тем
+  const styles = {
+    classic: { bg: "bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white", card: "bg-white/5 border-white/10", btnPrimary: "bg-white text-black", btnSecondary: "bg-white/10 hover:bg-white/20", textMuted: "text-gray-400" },
+    light: { bg: "bg-gradient-to-br from-gray-50 to-gray-200 text-gray-900", card: "bg-white/80 border-white shadow-sm", btnPrimary: "bg-blue-600 text-white", btnSecondary: "bg-gray-200 hover:bg-gray-300", textMuted: "text-gray-500" },
+    kids: { bg: "bg-gradient-to-br from-yellow-200 via-pink-200 to-indigo-200 text-indigo-900", card: "bg-white/60 border-2 border-white rounded-3xl shadow-sm", btnPrimary: "bg-indigo-500 text-white rounded-full", btnSecondary: "bg-white/50 hover:bg-white/80 rounded-full", textMuted: "text-indigo-700" }
+  };
+  const s = styles[theme as keyof typeof styles] || styles.kids;
+
+  if (loading) return <div className={`min-h-screen flex items-center justify-center font-sans ${s.bg}`}>Загрузка...</div>;
+  if (error) return <div className="min-h-screen bg-red-500 flex items-center justify-center text-white font-sans">{error}</div>;
+  if (!data) return null;
+
+  const { event, invites } = data;
+  const goingCount = invites.filter((i: any) => i.status === 'going').length;
+  const notGoingCount = invites.filter((i: any) => i.status === 'not_going').length;
+  const maybeCount = invites.filter((i: any) => i.status === 'maybe').length;
 
   return (
-    <main className={`min-h-screen p-6 flex items-center justify-center font-sans transition-colors duration-500 ${s.bg}`}>
-      <div className={`w-full max-w-md backdrop-blur-xl border rounded-3xl p-8 shadow-2xl transition-all duration-500 ${s.card}`}>
-        <h1 className="text-3xl font-bold mb-6 tracking-tight">Создать событие</h1>
+    <main className={`min-h-screen p-6 font-sans transition-colors duration-500 ${s.bg}`}>
+      <div className="max-w-2xl mx-auto pt-10">
         
-        <form onSubmit={handleCreate} className="flex flex-col gap-5">
-          <div>
-            <label className="text-sm opacity-70">Название</label>
-            <input required type="text" value={form.title} onChange={e => setForm({...form, title: e.target.value})} 
-              className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} 
-              placeholder="День рождения Маши" />
-          </div>
-          
-          <div>
-            <label className="text-sm opacity-70">Дата и время</label>
-            <input required type="datetime-local" value={form.dateTime} onChange={e => setForm({...form, dateTime: e.target.value})} 
-              className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} />
-          </div>
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold tracking-tight mb-2">{event.title}</h1>
+          <p className={s.textMuted}>📅 {new Date(event.dateTime).toLocaleString('ru-RU')}</p>
+          <p className={s.textMuted}>📍 {event.location || 'Не указано'}</p>
+        </div>
 
-          <div>
-            <label className="text-sm opacity-70">Место (опционально)</label>
-            <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})} 
-              className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} 
-              placeholder="Кафе Лето" />
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className={`p-4 rounded-2xl text-center border ${s.card}`}>
+            <div className="text-3xl font-bold text-green-500">{goingCount}</div>
+            <div className={`text-xs uppercase tracking-wider ${s.textMuted}`}>Придут</div>
           </div>
+          <div className={`p-4 rounded-2xl text-center border ${s.card}`}>
+            <div className="text-3xl font-bold text-yellow-500">{maybeCount}</div>
+            <div className={`text-xs uppercase tracking-wider ${s.textMuted}`}>Не уверены</div>
+          </div>
+          <div className={`p-4 rounded-2xl text-center border ${s.card}`}>
+            <div className="text-3xl font-bold text-red-500">{notGoingCount}</div>
+            <div className={`text-xs uppercase tracking-wider ${s.textMuted}`}>Не придут</div>
+          </div>
+        </div>
 
-          <button type="submit" disabled={loading} 
-            className={`mt-4 w-full py-4 font-semibold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg ${s.btn}`}>
-            {loading ? 'Создаем...' : 'Создать и перейти к гостям'}
-          </button>
-        </form>
+        <button onClick={generateInvite} disabled={generating} className={`w-full py-4 mb-8 font-semibold transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg ${s.btnPrimary}`}>
+          {generating ? 'Создаем...' : '+ Создать новую ссылку'}
+        </button>
+
+        <h3 className="text-xl font-semibold mb-4">Ваши приглашения ({invites.length}):</h3>
+        <div className="flex flex-col gap-3">
+          {invites.map((invite: any, index: number) => (
+            <div key={invite.id} className={`flex items-center justify-between p-4 border transition-all ${s.card}`}>
+              <div className="flex items-center gap-3">
+                <strong>Гость #{index + 1}</strong> 
+                <span>{invite.status === 'going' ? '✅' : invite.status === 'maybe' ? '🤔' : invite.status === 'not_going' ? '❌' : '⏳'}</span>
+              </div>
+              <div className="flex gap-2 text-sm">
+                <button onClick={() => copyLink(invite.inviteToken)} className={`px-3 py-2 font-medium transition-all active:scale-95 ${s.btnSecondary}`}>📋</button>
+                <button onClick={() => shareInvite(invite.inviteToken)} className={`px-3 py-2 font-medium transition-all active:scale-95 ${s.btnSecondary}`}>↗</button>
+                <button onClick={() => deleteInvite(invite.id)} className="px-3 py-2 bg-red-500/20 text-red-500 rounded-xl hover:bg-red-500/40 transition-all active:scale-95 font-medium">✕</button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </main>
   );
