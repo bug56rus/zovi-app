@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Анонимные приглашения на мероприятия. Создавай события и собирай друзей.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: '#3b82f6',
+    background_color: '#fef08a', // Нежно-желтый (как в детской теме)
+    theme_color: '#6366f1',      // Индиго (для верхней панели iPhone)
     icons: [
       {
         src: '/icon-192x192.png',

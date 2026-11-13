@@ -16,7 +16,7 @@ const ThemeContext = createContext<ThemeContextType>({
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('classic');
+  const [theme, setThemeState] = useState<Theme>('kids');
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('app_theme') as Theme;
