@@ -2,40 +2,59 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-// 👇 ИСПРАВЛЕНЫ ПУТИ: используем ../../, чтобы выйти из папки [eventId]
 import { playClick } from '../../utils/sound';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function EventDashboard() {
   const { eventId } = useParams();
   const { theme } = useTheme();
+  
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false); // Для фонового обновления
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
 
-  const fetchEventData = async () => {
+  // Функция загрузки данных. 
+  // isBackground = true означает, что мы обновляем данные незаметно, не показывая экран "Загрузка..."
+  const fetchEventData = async (isBackground = false) => {
     const adminToken = localStorage.getItem(`admin_token_${eventId}`);
     if (!adminToken) { 
       setError('Нет доступа'); 
       setLoading(false); 
       return; 
     }
+    
+    if (isBackground) setRefreshing(true);
+
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${eventId}`, { 
         headers: { 'X-Admin-Token': adminToken },
-        cache: 'no-store'
+        cache: 'no-store' // Обязательно отключаем кэш для получения свежих данных
       });
-      if (res.ok) setData(await res.json());
-      else setError('Ошибка данных');
+      if (res.ok) {
+        setData(await res.json());
+      } else {
+        setError('Ошибка данных');
+      }
     } catch (e) { 
-      setError('Ошибка сети'); 
+      if (!isBackground) setError('Ошибка сети'); 
     }
-    setLoading(false);
+    
+    if (isBackground) setRefreshing(false);
+    else setLoading(false);
   };
 
+  // Эффект для первоначальной загрузки и настройки автообновления
   useEffect(() => { 
-    fetchEventData(); 
+    fetchEventData(); // Загружаем сразу при открытии
+
+    // Настраиваем таймер: каждые 5 секунд незаметно запрашиваем новые данные
+    const interval = setInterval(() => {
+      fetchEventData(true);
+    }, 5000);
+
+    return () => clearInterval(interval); // Очищаем таймер, когда уходим со страницы
   }, [eventId]);
 
   const generateInvite = async () => {
@@ -48,7 +67,7 @@ export default function EventDashboard() {
         headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken as string }, 
         body: JSON.stringify({ count: 1 }) 
       });
-      await fetchEventData(); 
+      await fetchEventData(true); // Обновляем список после создания
     } catch (e) { 
       alert('Ошибка при создании ссылки'); 
     }
@@ -64,7 +83,7 @@ export default function EventDashboard() {
         method: 'DELETE', 
         headers: { 'X-Admin-Token': adminToken as string } 
       });
-      await fetchEventData();
+      await fetchEventData(true);
     } catch (e) { 
       alert('Ошибка при удалении'); 
     }
@@ -109,10 +128,21 @@ export default function EventDashboard() {
     <main className={`min-h-screen p-6 font-sans transition-colors duration-500 ${s.bg}`}>
       <div className="max-w-2xl mx-auto pt-10">
         
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold tracking-tight mb-2">{event.title}</h1>
-          <p className={s.textMuted}>📅 {new Date(event.dateTime).toLocaleString('ru-RU')}</p>
-          <p className={s.textMuted}>📍 {event.location || 'Не указано'}</p>
+        {/* Шапка с кнопкой обновления */}
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight mb-2">{event.title}</h1>
+            <p className={s.textMuted}>📅 {new Date(event.dateTime).toLocaleString('ru-RU')}</p>
+            <p className={s.textMuted}>📍 {event.location || 'Не указано'}</p>
+          </div>
+          <button 
+            onClick={() => { playClick(); fetchEventData(true); }} 
+            disabled={refreshing}
+            className={`p-3 rounded-full border transition-all ${s.card} ${refreshing ? 'opacity-50' : 'hover:scale-105 active:scale-95'}`}
+            title="Обновить данные"
+          >
+            {refreshing ? '⏳' : '🔄'}
+          </button>
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-8">
