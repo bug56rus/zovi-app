@@ -1,9 +1,15 @@
-/* apps/web/app/globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ... ваши существующие стили ... */
+/* Базовые настройки (убираем жесткий черный фон, чтобы темы работали) */
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* --- АНИМАЦИИ ДЛЯ СВЕЧЕНИЯ --- */
 
 @keyframes float1 {
   0% { transform: translate(0, 0) scale(1); }
@@ -23,6 +29,7 @@
   100% { transform: translate(0, 0) scale(1); }
 }
 
+/* Классы для применения анимаций к элементам */
 .animate-float1 { animation: float1 15s ease-in-out infinite; }
 .animate-float2 { animation: float2 20s ease-in-out infinite; }
 .animate-float3 { animation: float3 18s ease-in-out infinite; }
