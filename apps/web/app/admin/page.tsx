@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { playClick } from '../utils/sound'; // Импортируем звук
 
 export default function CreateEventPage() {
   const router = useRouter();
@@ -10,6 +11,7 @@ export default function CreateEventPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    playClick(); // Звук!
     setLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`, {
@@ -32,32 +34,35 @@ export default function CreateEventPage() {
   };
 
   return (
-    <main style={{ padding: 20, fontFamily: 'sans-serif', maxWidth: 500, margin: '0 auto' }}>
-      <h1>Создать мероприятие</h1>
-      <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
-        <div>
-          <label>Название события</label>
-          <input required type="text" value={form.title} onChange={e => setForm({...form, title: e.target.value})} 
-            style={{ width: '100%', padding: 10, marginTop: 5, borderRadius: 8, border: '1px solid #ccc' }} placeholder="День рождения Маши" />
-        </div>
+    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white p-6 flex items-center justify-center font-sans">
+      <div className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
+        <h1 className="text-3xl font-bold mb-8 tracking-tight">Создать событие</h1>
         
-        <div>
-          <label>Дата и время</label>
-          <input required type="datetime-local" value={form.dateTime} onChange={e => setForm({...form, dateTime: e.target.value})} 
-            style={{ width: '100%', padding: 10, marginTop: 5, borderRadius: 8, border: '1px solid #ccc' }} />
-        </div>
+        <form onSubmit={handleCreate} className="flex flex-col gap-5">
+          <div>
+            <label className="text-sm text-gray-300">Название</label>
+            <input required type="text" value={form.title} onChange={e => setForm({...form, title: e.target.value})} 
+              className="w-full mt-2 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-white/40 transition-colors" placeholder="День рождения Маши" />
+          </div>
+          
+          <div>
+            <label className="text-sm text-gray-300">Дата и время</label>
+            <input required type="datetime-local" value={form.dateTime} onChange={e => setForm({...form, dateTime: e.target.value})} 
+              className="w-full mt-2 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/40 transition-colors [color-scheme:dark]" />
+          </div>
 
-        <div>
-          <label>Место (опционально)</label>
-          <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})} 
-            style={{ width: '100%', padding: 10, marginTop: 5, borderRadius: 8, border: '1px solid #ccc' }} placeholder="Кафе Лето" />
-        </div>
+          <div>
+            <label className="text-sm text-gray-300">Место (опционально)</label>
+            <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})} 
+              className="w-full mt-2 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-white/40 transition-colors" placeholder="Кафе Лето" />
+          </div>
 
-        <button type="submit" disabled={loading} 
-          style={{ padding: 15, background: '#3b82f6', color: 'white', border: 'none', borderRadius: 8, fontSize: 16, cursor: 'pointer', marginTop: 10 }}>
-          {loading ? 'Создаем...' : 'Создать и перейти к гостям'}
-        </button>
-      </form>
+          <button type="submit" disabled={loading} 
+            className="mt-6 w-full py-4 bg-white text-black font-semibold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+            {loading ? 'Создаем...' : 'Создать и перейти к гостям'}
+          </button>
+        </form>
+      </div>
     </main>
   );
 }

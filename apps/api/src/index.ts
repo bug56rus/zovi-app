@@ -3,8 +3,8 @@ import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
 import * as dotenv from 'dotenv';
 import { db, events, invites } from '@code/db';
-import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
+import { eq, and } from 'drizzle-orm';
 
 dotenv.config();
 
@@ -149,6 +149,20 @@ app.post('/i/:inviteToken/rsvp', async (request, reply) => {
   reply.setCookie('guest_magic_token', magicToken, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 31536000 });
 
   return { ok: true, status, magicToken };
+});
+
+// 5. Удаление инвайта (для организатора)
+app.delete('/events/:eventId/invites/:inviteId', async (request, reply) => {
+  const { eventId, inviteId } = request.params as { eventId: string, inviteId: string };
+  const adminToken = request.headers['x-admin-token'] as string;
+
+  const event = await db.query.events.findFirst({ where: eq(events.id, eventId) });
+  if (!event || event.adminToken !== adminToken) {
+    return reply.status(403).send({ error: 'Доступ запрещен' });
+  }
+
+  await db.delete(invites).where(and(eq(invites.id, inviteId), eq(invites.eventId, eventId)));
+  return { ok: true };
 });
 
 const start = async () => {
