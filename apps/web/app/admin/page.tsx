@@ -2,16 +2,22 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { playClick } from '../utils/sound'; // Импортируем звук
+import { playClick } from '../utils/sound';
 
 export default function CreateEventPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ title: '', dateTime: '', location: '', description: '' });
+  const [form, setForm] = useState({ 
+    title: '', 
+    dateTime: '', 
+    location: '', 
+    description: '',
+    templateId: 'classic' // По умолчанию тёмная тема
+  });
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    playClick(); // Звук!
+    playClick();
     setLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`, {
@@ -36,7 +42,7 @@ export default function CreateEventPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white p-6 flex items-center justify-center font-sans">
       <div className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
-        <h1 className="text-3xl font-bold mb-8 tracking-tight">Создать событие</h1>
+        <h1 className="text-3xl font-bold mb-6 tracking-tight">Создать событие</h1>
         
         <form onSubmit={handleCreate} className="flex flex-col gap-5">
           <div>
@@ -57,8 +63,27 @@ export default function CreateEventPage() {
               className="w-full mt-2 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-white/40 transition-colors" placeholder="Кафе Лето" />
           </div>
 
+          {/* ВЫБОР ТЕМЫ */}
+          <div>
+            <label className="text-sm text-gray-300 mb-2 block">Стиль приглашения</label>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => { playClick(); setForm({...form, templateId: 'classic'}); }}
+                className={`flex-1 py-2 rounded-xl text-sm border transition-all ${form.templateId === 'classic' ? 'bg-white/30 border-white' : 'bg-black/20 border-white/10 text-gray-400'}`}>
+                🌙 Тёмная
+              </button>
+              <button type="button" onClick={() => { playClick(); setForm({...form, templateId: 'light'}); }}
+                className={`flex-1 py-2 rounded-xl text-sm border transition-all ${form.templateId === 'light' ? 'bg-white/30 border-white' : 'bg-black/20 border-white/10 text-gray-400'}`}>
+                ☀️ Светлая
+              </button>
+              <button type="button" onClick={() => { playClick(); setForm({...form, templateId: 'kids'}); }}
+                className={`flex-1 py-2 rounded-xl text-sm border transition-all ${form.templateId === 'kids' ? 'bg-white/30 border-white' : 'bg-black/20 border-white/10 text-gray-400'}`}>
+                🎈 Детская
+              </button>
+            </div>
+          </div>
+
           <button type="submit" disabled={loading} 
-            className="mt-6 w-full py-4 bg-white text-black font-semibold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+            className="mt-4 w-full py-4 bg-white text-black font-semibold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-[0_0_20px_rgba(255,255,255,0.3)]">
             {loading ? 'Создаем...' : 'Создать и перейти к гостям'}
           </button>
         </form>

@@ -1,7 +1,6 @@
 import RsvpButtons from './RsvpButtons';
 import type { Metadata, ResolvingMetadata } from 'next';
 
-// Функция для получения данных события с бэкенда
 async function getEventData(inviteToken: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/i/${inviteToken}`, {
     cache: 'no-store',
@@ -14,7 +13,6 @@ type Props = {
   params: Promise<{ inviteToken: string }>
 };
 
-// Генерация мета-тегов для красивого превью в MAX/Telegram
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
@@ -23,9 +21,7 @@ export async function generateMetadata(
   const cleanToken = inviteToken.split(/[^a-zA-Z0-9]/)[0];
   const data = await getEventData(cleanToken);
 
-  if (!data) {
-    return { title: 'Приглашение не найдено | Зови' };
-  }
+  if (!data) return { title: 'Приглашение не найдено | Зови' };
 
   const { event } = data;
   const formattedDate = new Date(event.dateTime).toLocaleString('ru-RU');
@@ -43,13 +39,9 @@ export async function generateMetadata(
   };
 }
 
-// Основной компонент страницы
 export default async function InvitePage({ params }: Props) {
   const { inviteToken } = await params;
-  
-  // Защита от мусора в ссылке (если скопировали вместе с текстом)
   const cleanToken = inviteToken.split(/[^a-zA-Z0-9]/)[0]; 
-  
   const data = await getEventData(cleanToken);
 
   if (!data) {
@@ -65,62 +57,68 @@ export default async function InvitePage({ params }: Props) {
 
   const { event, guests } = data;
 
+  // ВЫБОР СТИЛЕЙ В ЗАВИСИМОСТИ ОТ ТЕМЫ
+  const themes: Record<string, any> = {
+    classic: {
+      bg: "bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white",
+      card: "bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl",
+      textMuted: "text-gray-300",
+      btn: "bg-white/5 hover:bg-white/10 border-white/10",
+      avatar: "bg-white/10"
+    },
+    light: {
+      bg: "bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 text-gray-900",
+      card: "bg-white/70 backdrop-blur-xl border border-white shadow-xl rounded-3xl",
+      textMuted: "text-gray-600",
+      btn: "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-900",
+      avatar: "bg-gray-200"
+    },
+    kids: {
+      bg: "bg-gradient-to-br from-yellow-200 via-pink-200 to-indigo-200 text-indigo-900",
+      card: "bg-white/60 backdrop-blur-xl border-4 border-white shadow-xl rounded-[2.5rem]",
+      textMuted: "text-indigo-700 font-medium",
+      btn: "bg-white/50 hover:bg-white/80 border-white shadow-sm",
+      avatar: "bg-indigo-200 text-indigo-800 font-bold"
+    }
+  };
+
+  const theme = themes[event.templateId] || themes.classic;
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white p-6 font-sans flex flex-col items-center">
+    <main className={`min-h-screen p-6 font-sans flex flex-col items-center transition-colors duration-500 ${theme.bg}`}>
       <div className="w-full max-w-md mt-10">
         
-        {/* Карточка события (Жидкое стекло) */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-3xl mb-8 shadow-2xl relative overflow-hidden">
-          {/* Легкое свечение на фоне карточки */}
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 pointer-events-none"></div>
-          
-          <h1 className="text-4xl font-bold mb-4 tracking-tight relative z-10">{event.title}</h1>
-          <div className="space-y-2 text-gray-300 relative z-10">
-            <p className="flex items-center gap-2">
-              <span>📅</span> {new Date(event.dateTime).toLocaleString('ru-RU')}
-            </p>
-            {event.location && (
-              <p className="flex items-center gap-2">
-                <span>📍</span> {event.location}
-              </p>
-            )}
+        <div className={`p-8 mb-8 relative overflow-hidden ${theme.card}`}>
+          <h1 className="text-4xl font-bold mb-4 tracking-tight">{event.title}</h1>
+          <div className={`space-y-2 ${theme.textMuted}`}>
+            <p className="flex items-center gap-2"><span>📅</span> {new Date(event.dateTime).toLocaleString('ru-RU')}</p>
+            {event.location && <p className="flex items-center gap-2"><span>📍</span> {event.location}</p>}
             {event.description && (
-              <p className="mt-4 text-sm text-gray-400 border-t border-white/10 pt-4">
+              <p className={`mt-4 text-sm border-t pt-4 ${event.templateId === 'kids' ? 'border-indigo-200' : 'border-white/10'}`}>
                 {event.description}
               </p>
             )}
           </div>
         </div>
 
-        {/* Блок с кнопками */}
         <h3 className="text-xl font-semibold mb-4 ml-2">Ваш ответ:</h3>
-        <RsvpButtons inviteToken={cleanToken} currentStatus={data.currentGuestStatus} />
+        <RsvpButtons inviteToken={cleanToken} currentStatus={data.currentGuestStatus} templateId={event.templateId} />
 
-        {/* Список гостей (если разрешено организатором) */}
         {event.showGuests && (
-          <div className="mt-8 bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-3xl shadow-lg">
-            <h3 className="text-lg font-semibold mb-4 text-gray-200">Уже ответили ({guests.length}):</h3>
+          <div className={`mt-8 p-6 ${theme.card}`}>
+            <h3 className="text-lg font-semibold mb-4">Уже ответили ({guests.length}):</h3>
             <ul className="space-y-3">
               {guests.map((g: any, i: number) => (
-                <li key={i} className="text-gray-300 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm">
+                <li key={i} className={`flex items-center gap-3 ${theme.textMuted}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${theme.avatar}`}>
                     {i + 1}
                   </div>
                   {g.status === 'going' ? '✅ Идет' : g.status === 'maybe' ? '🤔 Думает' : '❌ Не идет'}
                 </li>
               ))}
-              {guests.length === 0 && (
-                <p className="text-gray-500 text-sm">Пока никто не ответил. Будьте первым!</p>
-              )}
             </ul>
           </div>
         )}
-        
-        {/* Футер */}
-        <div className="text-center mt-12 mb-6 opacity-50">
-          <p className="text-xs">Создано в приложении Зови</p>
-        </div>
-        
       </div>
     </main>
   );
