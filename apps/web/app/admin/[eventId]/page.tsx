@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { playClick } from '../utils/sound';
-import { useTheme } from '../context/ThemeContext';
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+// 👇 ИСПРАВЛЯЕМ ПУТИ: добавляем еще одну точку и слэш
+import { playClick } from '../../utils/sound'; 
+import { useTheme } from '../../context/ThemeContext'; 
 
-export default function CreateEventPage() {
+export default function EventDashboard() {
   const router = useRouter();
   const { theme } = useTheme(); // Получаем текущую тему для отправки гостю
   const [loading, setLoading] = useState(false);
