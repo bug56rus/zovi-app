@@ -3,17 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { playClick } from '../utils/sound';
+import { useTheme } from '../context/ThemeContext';
 
 export default function CreateEventPage() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ 
-    title: '', 
-    dateTime: '', 
-    location: '', 
-    description: '',
-    templateId: 'classic' // По умолчанию тёмная тема
-  });
+  const [form, setForm] = useState({ title: '', dateTime: '', location: '', description: '', templateId: 'classic' });
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,66 +21,57 @@ export default function CreateEventPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
       });
-      
       if (res.ok) {
         const data = await res.json();
         localStorage.setItem(`admin_token_${data.event.id}`, data.adminToken);
         router.push(`/admin/${data.event.id}`);
-      } else {
-        alert('Ошибка при создании события');
-      }
-    } catch (error) {
-      alert('Ошибка сети');
-    }
+      } else alert('Ошибка при создании');
+    } catch (error) { alert('Ошибка сети'); }
     setLoading(false);
   };
 
+  // Стили для страницы создания
+  const styles = {
+    classic: { bg: "bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white", card: "bg-white/10 border-white/20", input: "bg-black/20 border-white/10 text-white placeholder-gray-500", btn: "bg-white text-black" },
+    light: { bg: "bg-gradient-to-br from-gray-50 to-gray-200 text-gray-900", card: "bg-white/70 border-white shadow-xl", input: "bg-gray-100 border-gray-300 text-gray-900 placeholder-gray-400", btn: "bg-blue-600 text-white" },
+    kids: { bg: "bg-gradient-to-br from-yellow-200 via-pink-200 to-indigo-200 text-indigo-900", card: "bg-white/60 border-4 border-white shadow-xl rounded-[2.5rem]", input: "bg-white/50 border-indigo-200 text-indigo-900 placeholder-indigo-300", btn: "bg-indigo-500 text-white rounded-full" }
+  };
+
+  const s = styles[theme] || styles.classic;
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white p-6 flex items-center justify-center font-sans">
-      <div className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
+    <main className={`min-h-screen p-6 flex items-center justify-center font-sans transition-colors duration-500 ${s.bg}`}>
+      <div className={`w-full max-w-md backdrop-blur-xl border rounded-3xl p-8 shadow-2xl transition-all duration-500 ${s.card}`}>
         <h1 className="text-3xl font-bold mb-6 tracking-tight">Создать событие</h1>
         
         <form onSubmit={handleCreate} className="flex flex-col gap-5">
           <div>
-            <label className="text-sm text-gray-300">Название</label>
-            <input required type="text" value={form.title} onChange={e => setForm({...form, title: e.target.value})} 
-              className="w-full mt-2 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-white/40 transition-colors" placeholder="День рождения Маши" />
+            <label className="text-sm opacity-70">Название</label>
+            <input required type="text" value={form.title} onChange={e => setForm({...form, title: e.target.value})} className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} placeholder="День рождения" />
+          </div>
+          <div>
+            <label className="text-sm opacity-70">Дата и время</label>
+            <input required type="datetime-local" value={form.dateTime} onChange={e => setForm({...form, dateTime: e.target.value})} className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} />
+          </div>
+          <div>
+            <label className="text-sm opacity-70">Место (опционально)</label>
+            <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})} className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} placeholder="Кафе" />
           </div>
           
           <div>
-            <label className="text-sm text-gray-300">Дата и время</label>
-            <input required type="datetime-local" value={form.dateTime} onChange={e => setForm({...form, dateTime: e.target.value})} 
-              className="w-full mt-2 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/40 transition-colors [color-scheme:dark]" />
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-300">Место (опционально)</label>
-            <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})} 
-              className="w-full mt-2 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-white/40 transition-colors" placeholder="Кафе Лето" />
-          </div>
-
-          {/* ВЫБОР ТЕМЫ */}
-          <div>
-            <label className="text-sm text-gray-300 mb-2 block">Стиль приглашения</label>
+            <label className="text-sm opacity-70 mb-2 block">Стиль приглашения (для гостя)</label>
             <div className="flex gap-2">
-              <button type="button" onClick={() => { playClick(); setForm({...form, templateId: 'classic'}); }}
-                className={`flex-1 py-2 rounded-xl text-sm border transition-all ${form.templateId === 'classic' ? 'bg-white/30 border-white' : 'bg-black/20 border-white/10 text-gray-400'}`}>
-                🌙 Тёмная
-              </button>
-              <button type="button" onClick={() => { playClick(); setForm({...form, templateId: 'light'}); }}
-                className={`flex-1 py-2 rounded-xl text-sm border transition-all ${form.templateId === 'light' ? 'bg-white/30 border-white' : 'bg-black/20 border-white/10 text-gray-400'}`}>
-                ☀️ Светлая
-              </button>
-              <button type="button" onClick={() => { playClick(); setForm({...form, templateId: 'kids'}); }}
-                className={`flex-1 py-2 rounded-xl text-sm border transition-all ${form.templateId === 'kids' ? 'bg-white/30 border-white' : 'bg-black/20 border-white/10 text-gray-400'}`}>
-                🎈 Детская
-              </button>
+              {['classic', 'light', 'kids'].map((t) => (
+                <button key={t} type="button" onClick={() => { playClick(); setForm({...form, templateId: t}); }}
+                  className={`flex-1 py-2 rounded-xl text-sm border transition-all ${form.templateId === t ? 'ring-2 ring-blue-500 scale-105' : 'opacity-50'}`}>
+                  {t === 'classic' ? '🌙 Тёмная' : t === 'light' ? '☀️ Светлая' : '🎈 Детская'}
+                </button>
+              ))}
             </div>
           </div>
 
-          <button type="submit" disabled={loading} 
-            className="mt-4 w-full py-4 bg-white text-black font-semibold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-            {loading ? 'Создаем...' : 'Создать и перейти к гостям'}
+          <button type="submit" disabled={loading} className={`mt-4 w-full py-4 font-semibold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg ${s.btn}`}>
+            {loading ? 'Создаем...' : 'Создать'}
           </button>
         </form>
       </div>
