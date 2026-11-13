@@ -1,156 +1,137 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation'; // 👈 ДОБАВЛЕН useRouter
-import { playClick } from '../../utils/sound';
-import { useTheme } from '../../context/ThemeContext';
+import Link from 'next/link';
+import { useTheme } from './context/ThemeContext';
 
-export default function EventDashboard() {
-  const { eventId } = useParams();
-  const router = useRouter(); // Теперь он найден
+export default function Home() {
   const { theme } = useTheme();
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
-  const [error, setError] = useState('');
 
-  const fetchEventData = async () => {
-    const adminToken = localStorage.getItem(`admin_token_${eventId}`);
-    if (!adminToken) { 
-      setError('Нет доступа'); 
-      setLoading(false); 
-      return; 
-    }
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${eventId}`, { 
-        headers: { 'X-Admin-Token': adminToken },
-        cache: 'no-store' // 👈 Чтобы данные всегда были свежими
-      });
-      if (res.ok) setData(await res.json());
-      else setError('Ошибка данных');
-    } catch (e) { 
-      setError('Ошибка сети'); 
-    }
-    setLoading(false);
-  };
+  // Базовые настройки для тем
+  let bgColor = '#fef08a'; 
+  let textColor = '#312e81';
+  let subTextColor = '#4338ca';
+  let cardBg = 'rgba(255, 255, 255, 0.6)';
+  let cardBorder = '1px solid rgba(255, 255, 255, 0.8)';
+  let btnBg = '#6366f1';
+  let btnColor = '#ffffff';
+  
+  // Свечение (градиенты)
+  let glowBg = 'radial-gradient(circle at 15% 15%, rgba(236, 72, 153, 0.5) 0%, transparent 40%), radial-gradient(circle at 85% 85%, rgba(59, 130, 246, 0.5) 0%, transparent 40%)';
 
-  useEffect(() => { 
-    fetchEventData(); 
-  }, [eventId]);
-
-  const generateInvite = async () => {
-    playClick(); 
-    setGenerating(true);
-    const adminToken = localStorage.getItem(`admin_token_${eventId}`);
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${eventId}/invites`, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken as string }, 
-        body: JSON.stringify({ count: 1 }) 
-      });
-      await fetchEventData(); 
-    } catch (e) { 
-      alert('Ошибка при создании ссылки'); 
-    }
-    setGenerating(false);
-  };
-
-  const deleteInvite = async (inviteId: string) => {
-    if (!confirm('Удалить?')) return;
-    playClick();
-    const adminToken = localStorage.getItem(`admin_token_${eventId}`);
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${eventId}/invites/${inviteId}`, { 
-        method: 'DELETE', 
-        headers: { 'X-Admin-Token': adminToken as string } 
-      });
-      await fetchEventData();
-    } catch (e) { 
-      alert('Ошибка при удалении'); 
-    }
-  };
-
-  const shareInvite = async (inviteToken: string) => {
-    playClick();
-    const url = `${window.location.origin}/i/${inviteToken}`;
-    const text = `Приглашаю тебя на «${data.event.title}»! Подтверди участие:`;
-    if (navigator.share) { 
-      try { await navigator.share({ title: data.event.title, text, url }); } catch (err) {} 
-    } else { 
-      navigator.clipboard.writeText(url); 
-      alert('Скопировано!'); 
-    }
-  };
-
-  const copyLink = (inviteToken: string) => {
-    playClick(); 
-    navigator.clipboard.writeText(`${window.location.origin}/i/${inviteToken}`); 
-    alert('Скопировано!');
-  };
-
-  // Стили для разных тем
-  const styles = {
-    classic: { bg: "bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white", card: "bg-white/5 border-white/10", btnPrimary: "bg-white text-black", btnSecondary: "bg-white/10 hover:bg-white/20", textMuted: "text-gray-400" },
-    light: { bg: "bg-gradient-to-br from-gray-50 to-gray-200 text-gray-900", card: "bg-white/80 border-white shadow-sm", btnPrimary: "bg-blue-600 text-white", btnSecondary: "bg-gray-200 hover:bg-gray-300", textMuted: "text-gray-500" },
-    kids: { bg: "bg-gradient-to-br from-yellow-200 via-pink-200 to-indigo-200 text-indigo-900", card: "bg-white/60 border-2 border-white rounded-3xl shadow-sm", btnPrimary: "bg-indigo-500 text-white rounded-full", btnSecondary: "bg-white/50 hover:bg-white/80 rounded-full", textMuted: "text-indigo-700" }
-  };
-  const s = styles[theme as keyof typeof styles] || styles.kids;
-
-  if (loading) return <div className={`min-h-screen flex items-center justify-center font-sans ${s.bg}`}>Загрузка...</div>;
-  if (error) return <div className="min-h-screen bg-red-500 flex items-center justify-center text-white font-sans">{error}</div>;
-  if (!data) return null;
-
-  const { event, invites } = data;
-  const goingCount = invites.filter((i: any) => i.status === 'going').length;
-  const notGoingCount = invites.filter((i: any) => i.status === 'not_going').length;
-  const maybeCount = invites.filter((i: any) => i.status === 'maybe').length;
+  if (theme === 'classic') {
+    bgColor = '#0a0a0a';
+    textColor = '#ffffff';
+    subTextColor = '#a1a1aa';
+    cardBg = 'rgba(255, 255, 255, 0.05)';
+    cardBorder = '1px solid rgba(255, 255, 255, 0.1)';
+    btnBg = '#ffffff';
+    btnColor = '#000000';
+    glowBg = 'radial-gradient(circle at 20% 20%, rgba(168, 85, 247, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.4) 0%, transparent 50%)';
+  } else if (theme === 'light') {
+    bgColor = '#f3f4f6';
+    textColor = '#111827';
+    subTextColor = '#4b5563';
+    cardBg = 'rgba(255, 255, 255, 0.8)';
+    cardBorder = '1px solid #e5e7eb';
+    btnBg = '#2563eb';
+    btnColor = '#ffffff';
+    glowBg = 'radial-gradient(circle at 20% 20%, rgba(236, 72, 153, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.3) 0%, transparent 50%)';
+  }
 
   return (
-    <main className={`min-h-screen p-6 font-sans transition-colors duration-500 ${s.bg}`}>
-      <div className="max-w-2xl mx-auto pt-10">
+    <main style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      backgroundColor: bgColor,
+      backgroundImage: glowBg,
+      position: 'relative',
+      overflow: 'hidden',
+      transition: 'all 0.5s ease'
+    }}>
+      
+      <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: '800px', width: '100%' }}>
         
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold tracking-tight mb-2">{event.title}</h1>
-          <p className={s.textMuted}>📅 {new Date(event.dateTime).toLocaleString('ru-RU')}</p>
-          <p className={s.textMuted}>📍 {event.location || 'Не указано'}</p>
+        {/* Главный заголовок */}
+        <h1 style={{
+          fontSize: 'clamp(48px, 10vw, 96px)', // Адаптивный размер шрифта
+          fontWeight: '800',
+          letterSpacing: '-0.04em',
+          marginBottom: '16px',
+          color: textColor,
+          lineHeight: 1.1
+        }}>Зови</h1>
+        
+        {/* Подзаголовок */}
+        <p style={{
+          fontSize: 'clamp(18px, 3vw, 24px)',
+          marginBottom: '48px',
+          color: subTextColor,
+          maxWidth: '600px',
+          margin: '0 auto 48px auto',
+          lineHeight: 1.5
+        }}>
+          Создавай стильные приглашения за 2 минуты. Без скачивания приложений и сбора личных данных.
+        </p>
+        
+        {/* Карточки преимуществ */}
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '16px',
+          justifyContent: 'center',
+          marginBottom: '48px'
+        }}>
+          <div style={{ flex: '1 1 200px', background: cardBg, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: cardBorder, padding: '24px', borderRadius: '24px', textAlign: 'left' }}>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>🔒</div>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px', color: textColor }}>100% Анонимно</h3>
+            <p style={{ fontSize: '14px', color: subTextColor, margin: 0 }}>Мы не собираем имена и телефоны ваших гостей.</p>
+          </div>
+          
+          <div style={{ flex: '1 1 200px', background: cardBg, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: cardBorder, padding: '24px', borderRadius: '24px', textAlign: 'left' }}>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>✨</div>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px', color: textColor }}>Красиво</h3>
+            <p style={{ fontSize: '14px', color: subTextColor, margin: 0 }}>Современный дизайн, который не стыдно отправить.</p>
+          </div>
+          
+          <div style={{ flex: '1 1 200px', background: cardBg, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: cardBorder, padding: '24px', borderRadius: '24px', textAlign: 'left' }}>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚡️</div>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px', color: textColor }}>Без приложений</h3>
+            <p style={{ fontSize: '14px', color: subTextColor, margin: 0 }}>Гости подтверждают участие в один клик по ссылке.</p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className={`p-4 rounded-2xl text-center border ${s.card}`}>
-            <div className="text-3xl font-bold text-green-500">{goingCount}</div>
-            <div className={`text-xs uppercase tracking-wider ${s.textMuted}`}>Придут</div>
-          </div>
-          <div className={`p-4 rounded-2xl text-center border ${s.card}`}>
-            <div className="text-3xl font-bold text-yellow-500">{maybeCount}</div>
-            <div className={`text-xs uppercase tracking-wider ${s.textMuted}`}>Не уверены</div>
-          </div>
-          <div className={`p-4 rounded-2xl text-center border ${s.card}`}>
-            <div className="text-3xl font-bold text-red-500">{notGoingCount}</div>
-            <div className={`text-xs uppercase tracking-wider ${s.textMuted}`}>Не придут</div>
-          </div>
-        </div>
-
-        <button onClick={generateInvite} disabled={generating} className={`w-full py-4 mb-8 font-semibold transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg ${s.btnPrimary}`}>
-          {generating ? 'Создаем...' : '+ Создать новую ссылку'}
-        </button>
-
-        <h3 className="text-xl font-semibold mb-4">Ваши приглашения ({invites.length}):</h3>
-        <div className="flex flex-col gap-3">
-          {invites.map((invite: any, index: number) => (
-            <div key={invite.id} className={`flex items-center justify-between p-4 border transition-all ${s.card}`}>
-              <div className="flex items-center gap-3">
-                <strong>Гость #{index + 1}</strong> 
-                <span>{invite.status === 'going' ? '✅' : invite.status === 'maybe' ? '🤔' : invite.status === 'not_going' ? '❌' : '⏳'}</span>
-              </div>
-              <div className="flex gap-2 text-sm">
-                <button onClick={() => copyLink(invite.inviteToken)} className={`px-3 py-2 font-medium transition-all active:scale-95 ${s.btnSecondary}`}>📋</button>
-                <button onClick={() => shareInvite(invite.inviteToken)} className={`px-3 py-2 font-medium transition-all active:scale-95 ${s.btnSecondary}`}>↗</button>
-                <button onClick={() => deleteInvite(invite.id)} className="px-3 py-2 bg-red-500/20 text-red-500 rounded-xl hover:bg-red-500/40 transition-all active:scale-95 font-medium">✕</button>
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Кнопка */}
+        <Link 
+          href="/admin" 
+          style={{
+            display: 'inline-block',
+            padding: '20px 48px',
+            borderRadius: '999px',
+            fontWeight: 'bold',
+            fontSize: '18px',
+            textDecoration: 'none',
+            background: btnBg,
+            color: btnColor,
+            boxShadow: theme === 'classic' ? '0 10px 40px rgba(255,255,255,0.2)' : '0 10px 40px rgba(99,102,241,0.3)',
+            transition: 'transform 0.2s',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          Создать мероприятие
+        </Link>
       </div>
+
+      {/* Футер */}
+      <div style={{ position: 'absolute', bottom: '24px', zIndex: 10, fontSize: '14px', color: subTextColor, opacity: 0.6 }}>
+        © {new Date().getFullYear()} Зови. Сделано с любовью.
+      </div>
+
     </main>
   );
 }
