@@ -6,21 +6,24 @@ import { useTheme } from './context/ThemeContext';
 export default function Home() {
   const { theme } = useTheme();
 
-  let bgColor = '#fef08a'; 
-  let glow1 = '#ec4899'; // Ярко-розовый
-  let glow2 = '#3b82f6'; // Ярко-синий
-  let glow3 = '#a855f7'; // Ярко-фиолетовый
+  // Цвета для свечения (просто градиенты)
+  let glowBg = '';
+  let textColor = '#312e81';
+  let btnBg = '#6366f1';
 
   if (theme === 'classic') {
-    bgColor = '#0a0a0a';
-    glow1 = '#7e22ce';
-    glow2 = '#1d4ed8';
-    glow3 = '#be185d';
+    glowBg = 'radial-gradient(circle at 20% 20%, rgba(168, 85, 247, 0.6) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.6) 0%, transparent 50%)';
+    textColor = '#ffffff';
+    btnBg = '#ffffff';
   } else if (theme === 'light') {
-    bgColor = '#f3f4f6';
-    glow1 = '#fbcfe8'; 
-    glow2 = '#bfdbfe';
-    glow3 = '#e9d5ff';
+    glowBg = 'radial-gradient(circle at 20% 20%, rgba(236, 72, 153, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.4) 0%, transparent 50%)';
+    textColor = '#111827';
+    btnBg = '#2563eb';
+  } else {
+    // Детская (по умолчанию)
+    glowBg = 'radial-gradient(circle at 20% 20%, rgba(236, 72, 153, 0.8) 0%, transparent 60%), radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.8) 0%, transparent 60%)';
+    textColor = '#312e81';
+    btnBg = '#6366f1';
   }
 
   return (
@@ -32,35 +35,28 @@ export default function Home() {
       justifyContent: 'center',
       padding: '24px',
       fontFamily: 'system-ui, sans-serif',
-      background: bgColor,
+      backgroundColor: theme === 'classic' ? '#0a0a0a' : theme === 'light' ? '#f3f4f6' : '#fef08a',
+      backgroundImage: glowBg, // ВОТ ОНО СВЕЧЕНИЕ
       position: 'relative',
-      overflow: 'hidden',
       transition: 'background 0.5s'
     }}>
       
-      {/* ТЕСТОВОЕ СВЕЧЕНИЕ (БЕЗ ПРОЗРАЧНОСТИ, ЧТОБЫ ТОЧНО УВИДЕТЬ) */}
-      <div className="blob blob-1" style={{ background: glow1, opacity: 0.7 }}></div>
-      <div className="blob blob-2" style={{ background: glow2, opacity: 0.7 }}></div>
-      <div className="blob blob-3" style={{ background: glow3, opacity: 0.7 }}></div>
-
-      {/* КОНТЕНТ */}
       <div style={{ position: 'relative', zIndex: 10, textAlign: 'center' }}>
         <h1 style={{
           fontSize: '72px',
           fontWeight: 'bold',
           letterSpacing: '-2px',
           marginBottom: '16px',
-          color: theme === 'classic' ? 'white' : theme === 'light' ? '#111827' : '#312e81',
+          color: textColor,
         }}>Зови</h1>
         
-        {/* ДОБАВИЛ ТЕКСТ (V2), ЧТОБЫ ВЫ ПОНЯЛИ, ОБНОВИЛСЯ ЛИ САЙТ */}
+        {/* ЕСЛИ ВЫ ВИДИТЕ ЭТОТ ТЕКСТ, ЗНАЧИТ САЙТ ОБНОВИЛСЯ! */}
         <p style={{
-          fontSize: '20px',
+          fontSize: '24px',
+          fontWeight: 'bold',
           marginBottom: '48px',
-          maxWidth: '400px',
-          opacity: 0.8,
-          color: theme === 'classic' ? '#d1d5db' : theme === 'light' ? '#374151' : '#3730a3',
-        }}>Создавай события и собирай друзей. (V2)</p>
+          color: 'red',
+        }}>САЙТ ОБНОВИЛСЯ! (V3)</p>
         
         <Link 
           href="/admin" 
@@ -71,9 +67,9 @@ export default function Home() {
             fontWeight: 'bold',
             fontSize: '18px',
             textDecoration: 'none',
-            background: theme === 'classic' ? 'white' : theme === 'light' ? '#2563eb' : '#6366f1',
+            background: btnBg,
             color: theme === 'classic' ? 'black' : 'white',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
           }}
         >
           Создать мероприятие
