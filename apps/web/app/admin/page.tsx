@@ -57,18 +57,6 @@ export default function CreateEventPage() {
             <label className="text-sm opacity-70">Место (опционально)</label>
             <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})} className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} placeholder="Кафе" />
           </div>
-          
-          <div>
-            <label className="text-sm opacity-70 mb-2 block">Стиль приглашения (для гостя)</label>
-            <div className="flex gap-2">
-              {['classic', 'light', 'kids'].map((t) => (
-                <button key={t} type="button" onClick={() => { playClick(); setForm({...form, templateId: t}); }}
-                  className={`flex-1 py-2 rounded-xl text-sm border transition-all ${form.templateId === t ? 'ring-2 ring-blue-500 scale-105' : 'opacity-50'}`}>
-                  {t === 'classic' ? '🌙 Тёмная' : t === 'light' ? '☀️ Светлая' : '🎈 Детская'}
-                </button>
-              ))}
-            </div>
-          </div>
 
           <button type="submit" disabled={loading} className={`mt-4 w-full py-4 font-semibold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg ${s.btn}`}>
             {loading ? 'Создаем...' : 'Создать'}
