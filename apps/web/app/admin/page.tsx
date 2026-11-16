@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { playClick } from '../utils/sound';
 import { useTheme } from '../context/ThemeContext';
-import PreviewCard from '../components/PreviewCard'; // 👈 Импорт
+import PreviewCard from '../components/PreviewCard';
 
 const FONT_OPTIONS = [
   { name: 'Montserrat', var: 'var(--font-montserrat)' },
@@ -21,7 +21,6 @@ export default function CreateEventPage() {
   const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   
-  // 👇 Заменили coverPosition на textX и textY
   const [form, setForm] = useState({ 
     title: '', dateTime: '', location: '', description: '',
     coverImage: '/covers/cover1.jpg',
@@ -81,7 +80,19 @@ export default function CreateEventPage() {
             <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})} className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} placeholder="Кафе" />
           </div>
 
-          {/* 👇 ЖИВОЙ ПРЕДПРОСМОТР С ПЕРЕТАСКИВАНИЕМ 👇 */}
+          {/* 👇 НОВОЕ ПОЛЕ: ОПИСАНИЕ */}
+          <div>
+            <label className="text-sm opacity-70">Описание (дресс-код, тема и т.д.)</label>
+            <textarea 
+              value={form.description} 
+              onChange={e => setForm({...form, description: e.target.value})} 
+              className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} 
+              placeholder="Например: Дресс-код — все в белом. Тема — Гэтсби." 
+              rows={3}
+            />
+          </div>
+
+          {/* ЖИВОЙ ПРЕДПРОСМОТР С ПЕРЕТАСКИВАНИЕМ */}
           <PreviewCard 
             title={form.title}
             dateTime={form.dateTime}
@@ -111,7 +122,6 @@ export default function CreateEventPage() {
           <div className="bg-black/5 p-4 rounded-xl border border-black/10">
             <label className="text-sm opacity-70 mb-4 block">Настройки текста</label>
             <div className="flex items-center justify-between gap-4">
-              {/* Сетку PositionPicker убрали, оставили только Цвет и Шрифт */}
               <div className="flex flex-col items-center gap-2 flex-1">
                 <input type="color" value={form.textColor} onChange={(e) => setForm({...form, textColor: e.target.value})}
                   className="w-12 h-12 rounded-full cursor-pointer border-0 bg-transparent p-0 shadow-sm" title="Цвет текста" />
