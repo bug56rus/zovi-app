@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { playClick } from '../utils/sound';
 import { useTheme } from '../context/ThemeContext';
-import PositionPicker from '../components/PositionPicker';
-import PreviewCard from '../components/PreviewCard'; // 👈 ИМПОРТ
+import PreviewCard from '../components/PreviewCard'; // 👈 Импорт
 
 const FONT_OPTIONS = [
   { name: 'Montserrat', var: 'var(--font-montserrat)' },
@@ -22,12 +21,14 @@ export default function CreateEventPage() {
   const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   
+  // 👇 Заменили coverPosition на textX и textY
   const [form, setForm] = useState({ 
     title: '', dateTime: '', location: '', description: '',
     coverImage: '/covers/cover1.jpg',
-    coverPosition: 'center',
     textColor: '#ffffff',
-    fontFamily: 'Montserrat'
+    fontFamily: 'Montserrat',
+    textX: 50,
+    textY: 50
   });
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -80,16 +81,18 @@ export default function CreateEventPage() {
             <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})} className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} placeholder="Кафе" />
           </div>
 
-          {/* 👇 ЖИВОЙ ПРЕДПРОСМОТР 👇 */}
+          {/* 👇 ЖИВОЙ ПРЕДПРОСМОТР С ПЕРЕТАСКИВАНИЕМ 👇 */}
           <PreviewCard 
             title={form.title}
             dateTime={form.dateTime}
             location={form.location}
             description={form.description}
             coverImage={form.coverImage}
-            coverPosition={form.coverPosition}
             textColor={form.textColor}
             fontFamily={form.fontFamily}
+            textX={form.textX}
+            textY={form.textY}
+            onPositionChange={(x: number, y: number) => setForm({ ...form, textX: x, textY: y })}
           />
 
           <div className="bg-black/5 p-4 rounded-xl border border-black/10">
@@ -107,20 +110,17 @@ export default function CreateEventPage() {
 
           <div className="bg-black/5 p-4 rounded-xl border border-black/10">
             <label className="text-sm opacity-70 mb-4 block">Настройки текста</label>
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex flex-col items-center flex-1">
-                <PositionPicker value={form.coverPosition} onChange={(pos) => setForm({...form, coverPosition: pos})} />
-              </div>
-
-              <div className="flex flex-col items-center gap-2 flex-1 mt-2">
+            <div className="flex items-center justify-between gap-4">
+              {/* Сетку PositionPicker убрали, оставили только Цвет и Шрифт */}
+              <div className="flex flex-col items-center gap-2 flex-1">
                 <input type="color" value={form.textColor} onChange={(e) => setForm({...form, textColor: e.target.value})}
                   className="w-12 h-12 rounded-full cursor-pointer border-0 bg-transparent p-0 shadow-sm" title="Цвет текста" />
                 <span className="text-xs opacity-60">Цвет</span>
               </div>
 
-              <div className="flex flex-col items-center gap-2 flex-1 mt-2">
+              <div className="flex flex-col items-center gap-2 flex-1">
                 <select value={form.fontFamily} onChange={(e) => { playClick(); setForm({ ...form, fontFamily: e.target.value }); }}
-                  className={`w-full max-w-[110px] p-3 rounded-xl border text-sm focus:outline-none truncate ${s.input}`}
+                  className={`w-full max-w-[130px] p-3 rounded-xl border text-sm focus:outline-none truncate ${s.input}`}
                   style={{ fontFamily: FONT_OPTIONS.find(f => f.name === form.fontFamily)?.var }}>
                   {FONT_OPTIONS.map(font => (
                     <option key={font.name} value={font.name} style={{ fontFamily: font.var }}>{font.name}</option>
