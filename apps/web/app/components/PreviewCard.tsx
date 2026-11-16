@@ -35,7 +35,6 @@ export default function PreviewCard({
     } catch (e) {}
   }
 
-  // 👇 ЛОГИКА ПЕРЕТАСКИВАНИЯ
   const handlePointerDown = (e: React.PointerEvent) => {
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
@@ -49,7 +48,6 @@ export default function PreviewCard({
     const deltaX = e.clientX - dragStart.x;
     const deltaY = e.clientY - dragStart.y;
 
-    // Переводим движение мышки/пальца в проценты (ограничиваем краями карточки 10-90%)
     let newX = (textX || 50) + (deltaX / rect.width) * 100;
     let newY = (textY || 50) + (deltaY / rect.height) * 100;
     
@@ -67,13 +65,14 @@ export default function PreviewCard({
 
   return (
     <div className="w-full mb-6">
-      <p className="text-sm opacity-60 mb-2 ml-2 flex items-center gap-2">
-        <span>👆</span> Предпросмотр (текст можно двигать)
+      {/* 👇 БОЛЕЕ ПОНЯТНАЯ ПОДСКАЗКА */}
+      <p className="text-sm opacity-80 font-medium mb-2 ml-2 flex items-center gap-2">
+        <span>👆</span> Потяните текст, чтобы переместить его по открытке
       </p>
       
       <div 
         ref={cardRef}
-        className="relative w-full h-[320px] rounded-2xl overflow-hidden shadow-xl border border-black/10 select-none touch-none"
+        className="relative w-full h-[320px] rounded-2xl overflow-hidden shadow-xl border border-black/10 select-none touch-none bg-gray-100"
       >
         {coverImage ? (
           <img src={coverImage} alt="Cover" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
@@ -83,28 +82,41 @@ export default function PreviewCard({
         
         <div className={`absolute inset-0 bg-gradient-to-t ${overlayGradient} opacity-80 pointer-events-none`}></div>
 
-        {/* ПЕРЕТАСКИВАЕМЫЙ БЛОК */}
+        {/* 👇 ПЕРЕТАСКИВАЕМЫЙ БЛОК С ВИЗУАЛЬНОЙ РАМКОЙ */}
         <div 
-          className={`absolute flex flex-col cursor-grab active:cursor-grabbing w-[85%] ${isDragging ? 'scale-105' : ''} transition-transform duration-75`}
+          className={`
+            absolute flex flex-col cursor-grab active:cursor-grabbing w-[85%] p-3 rounded-xl
+            border-2 border-dashed transition-all duration-200
+            ${isDragging 
+              ? 'border-indigo-400 bg-black/10 scale-105 shadow-2xl' 
+              : 'border-white/40 hover:border-white/80 hover:bg-black/5'}
+          `}
           style={{ 
             left: `${textX}%`, 
             top: `${textY}%`, 
-            transform: 'translate(-50%, -50%)', // Центрируем текст под курсором
+            transform: 'translate(-50%, -50%)',
             fontFamily: currentFont,
           }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
         >
+          {/* Иконка-ручка для захвата */}
+          <div className="absolute -top-3 -right-3 bg-indigo-500 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
+            </svg>
+          </div>
+
           <h1 
-            className="text-3xl font-bold mb-1 drop-shadow-md leading-tight text-center"
+            className="text-3xl font-bold mb-1 drop-shadow-md leading-tight text-center pointer-events-none"
             style={{ color: textColor || '#ffffff' }}
           >
             {title || 'Название события'}
           </h1>
           
           <div 
-            className="space-y-1 text-sm font-medium drop-shadow-sm opacity-90 text-center"
+            className="space-y-1 text-sm font-medium drop-shadow-sm opacity-90 text-center pointer-events-none"
             style={{ color: textColor || '#ffffff' }}
           >
             <p>📅 {displayDate}</p>
