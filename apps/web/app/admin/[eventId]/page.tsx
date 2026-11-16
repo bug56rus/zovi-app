@@ -183,13 +183,15 @@ export default function EventDashboard() {
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-4 mb-2 flex-wrap">
+                <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-4xl font-bold tracking-tight">{event.title}</h1>
+                  {/* Иконка карандаша */}
                   <button 
                     onClick={() => { playClick(); setIsEditing(true); }} 
-                    className={`px-4 py-2 text-sm font-semibold rounded-xl border transition-all shadow-sm active:scale-95 ${s.btnSecondary}`}
+                    className={`p-2 text-lg leading-none rounded-full border transition-all shadow-sm active:scale-95 ${s.btnSecondary}`}
+                    title="Редактировать событие"
                   >
-                    ✏️ Изменить
+                    ✏️
                   </button>
                 </div>
                 <p className={s.textMuted}>📅 {new Date(event.dateTime).toLocaleString('ru-RU')}</p>
