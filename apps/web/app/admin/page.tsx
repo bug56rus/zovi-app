@@ -26,7 +26,7 @@ export default function CreateEventPage() {
     title: '', dateTime: '', location: '', description: '',
     coverImage: '/covers/cover1.jpg',
     textColor: '#ffffff',
-    fontFamily: 'Montserrat',
+    fontFamily: 'Great Vibes',
     textX: 50,
     textY: 50
   });

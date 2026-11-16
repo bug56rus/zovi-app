@@ -19,9 +19,8 @@ export default function PreviewCard({
 }: any) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   
-  const currentFont = fontMap[fontFamily] || fontMap['Montserrat'];
+  const currentFont = fontMap[fontFamily] || fontMap['Great Vibes']; // 👈 По умолчанию Great Vibes
 
   const isDarkText = ['#000000', '#111827', '#312e81', '#3730a3'].includes(textColor?.toLowerCase());
   const overlayGradient = isDarkText 
@@ -37,25 +36,24 @@ export default function PreviewCard({
 
   const handlePointerDown = (e: React.PointerEvent) => {
     setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
+  // 👇 НОВАЯ ПЛАВНАЯ ЛОГИКА ПЕРЕТАСКИВАНИЯ
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging || !cardRef.current) return;
     
     const rect = cardRef.current.getBoundingClientRect();
-    const deltaX = e.clientX - dragStart.x;
-    const deltaY = e.clientY - dragStart.y;
-
-    let newX = (textX || 50) + (deltaX / rect.width) * 100;
-    let newY = (textY || 50) + (deltaY / rect.height) * 100;
     
+    // Используем movementX и movementY для точного смещения без рывков
+    let newX = (textX || 50) + (e.movementX / rect.width) * 100;
+    let newY = (textY || 50) + (e.movementY / rect.height) * 100;
+    
+    // Ограничиваем краями (чтобы текст не улетел за пределы карточки)
     newX = Math.max(10, Math.min(90, newX));
     newY = Math.max(10, Math.min(90, newY));
 
-    onPositionChange(Math.round(newX), Math.round(newY));
-    setDragStart({ x: e.clientX, y: e.clientY });
+    onPositionChange(newX, newY); // Передаем плавающие значения без округления
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
@@ -65,7 +63,6 @@ export default function PreviewCard({
 
   return (
     <div className="w-full mb-6">
-      {/* 👇 БОЛЕЕ ПОНЯТНАЯ ПОДСКАЗКА */}
       <p className="text-sm opacity-80 font-medium mb-2 ml-2 flex items-center gap-2">
         <span>👆</span> Потяните текст, чтобы переместить его по открытке
       </p>
@@ -82,14 +79,13 @@ export default function PreviewCard({
         
         <div className={`absolute inset-0 bg-gradient-to-t ${overlayGradient} opacity-80 pointer-events-none`}></div>
 
-        {/* 👇 ПЕРЕТАСКИВАЕМЫЙ БЛОК С ВИЗУАЛЬНОЙ РАМКОЙ */}
         <div 
           className={`
             absolute flex flex-col cursor-grab active:cursor-grabbing w-[85%] p-3 rounded-xl
-            border-2 border-dashed transition-all duration-200
+            border-2 border-dashed transition-all duration-75
             ${isDragging 
-              ? 'border-indigo-400 bg-black/10 scale-105 shadow-2xl' 
-              : 'border-white/40 hover:border-white/80 hover:bg-black/5'}
+              ? 'border-indigo-400 bg-black/10 scale-105 shadow-2xl z-20' 
+              : 'border-white/40 hover:border-white/80 hover:bg-black/5 z-10'}
           `}
           style={{ 
             left: `${textX}%`, 
@@ -101,7 +97,6 @@ export default function PreviewCard({
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
         >
-          {/* Иконка-ручка для захвата */}
           <div className="absolute -top-3 -right-3 bg-indigo-500 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg pointer-events-none">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>

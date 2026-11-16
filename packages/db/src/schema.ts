@@ -17,7 +17,7 @@ export const events = pgTable('events', {
   coverImage: text('cover_image'),
   coverPosition: text('cover_position').default('center'),
   textColor: text('text_color').default('#ffffff'),
-  fontFamily: text('font_family').default('Montserrat'),
+  fontFamily: text('font_family').default('Great Vibes'), // 👈 ИЗМЕНЕНО
   
   // 👇 НОВЫЕ ПОЛЯ ДЛЯ СВОБОДНОГО ПЕРЕТАСКИВАНИЯ (X и Y в процентах)
   textX: integer('text_x').default(50),

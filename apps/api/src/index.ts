@@ -45,7 +45,7 @@ app.post('/events', async (request, reply) => {
     coverImage: coverImage || null,
     coverPosition: coverPosition || 'center',
     textColor: textColor || '#ffffff',
-    fontFamily: fontFamily || 'Montserrat',
+    fontFamily: fontFamily || 'Great Vibes', // 👈 ИЗМЕНЕНО
     textX: textX !== undefined ? textX : 50, // Сохраняем X (по умолчанию 50%)
     textY: textY !== undefined ? textY : 50, // Сохраняем Y (по умолчанию 50%)
   }).returning();
