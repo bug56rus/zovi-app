@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react'; // 👈 Добавлен useRef
 import { useParams } from 'next/navigation';
 import { playClick } from '../../utils/sound';
 import { useTheme } from '../../context/ThemeContext';
@@ -16,19 +16,20 @@ export default function EventDashboard() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
   
-  // Состояния для редактирования
   const [isEditing, setIsEditing] = useState(false);
+  
+  // 👇 ИСПОЛЬЗУЕМ REF, чтобы таймер всегда видел актуальное состояние
+  const isEditingRef = useRef(isEditing);
+
+  useEffect(() => {
+    isEditingRef.current = isEditing;
+  }, [isEditing]);
+
   const [editForm, setEditForm] = useState({ 
-    title: '', 
-    dateTime: '', 
-    location: '', 
-    description: '', 
-    coverImage: '',
-    coverPosition: 'center',
-    textColor: '#ffffff' // 👈 ДОБАВЛЕНО ПОЛЕ ДЛЯ ЦВЕТА
+    title: '', dateTime: '', location: '', description: '', 
+    coverImage: '', coverPosition: 'center', textColor: '#ffffff'
   });
   
-  // Хранилище для локальных имен
   const [localNames, setLocalNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -50,10 +51,10 @@ export default function EventDashboard() {
       });
       if (res.ok) {
         const json = await res.json();
-        setData(json);
+        setData(json); // Данные (статистика гостей) обновляются всегда
         
-        // Обновляем форму актуальными данными
-        if (!isEditing) {
+        // 👇 ИСПОЛЬЗУЕМ isEditingRef.current ВМЕСТО isEditing
+        if (!isEditingRef.current) {
           setEditForm({
             title: json.event.title,
             dateTime: new Date(json.event.dateTime).toISOString().slice(0, 16),
@@ -61,7 +62,7 @@ export default function EventDashboard() {
             description: json.event.description || '',
             coverImage: json.event.coverImage || '/covers/cover1.jpg',
             coverPosition: json.event.coverPosition || 'center',
-            textColor: json.event.textColor || '#ffffff' // 👈 ПОДГРУЖАЕМ ЦВЕТ
+            textColor: json.event.textColor || '#ffffff'
           });
         }
       }
@@ -87,7 +88,7 @@ export default function EventDashboard() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${eventId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken as string },
-        body: JSON.stringify(editForm) // Отправляем всю форму (включая textColor)
+        body: JSON.stringify(editForm) 
       });
       if (res.ok) { 
         setIsEditing(false); 
@@ -180,7 +181,6 @@ export default function EventDashboard() {
                 <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} 
                   className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} placeholder="Описание" rows={2} />
 
-                {/* БЛОК ВЫБОРА ОБЛОЖКИ, ПОЗИЦИИ И ЦВЕТА */}
                 <div className="flex flex-wrap gap-4 items-center bg-black/5 p-4 rounded-xl border border-black/10 mt-2">
                   <div className="flex-1">
                     <label className="text-sm opacity-70 mb-2 block">Обложка</label>
@@ -195,13 +195,11 @@ export default function EventDashboard() {
                     </div>
                   </div>
                   
-                  {/* ВЫБОР ПОЗИЦИИ */}
                   <PositionPicker 
                     value={editForm.coverPosition} 
                     onChange={(pos) => setEditForm({...editForm, coverPosition: pos})} 
                   />
 
-                  {/* ВЫБОР ЦВЕТА ТЕКСТА */}
                   <div className="flex flex-col items-center gap-2">
                     <input 
                       type="color" 
