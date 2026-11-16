@@ -25,8 +25,7 @@ export default function EventDashboard() {
 
   const [editForm, setEditForm] = useState({ 
     title: '', dateTime: '', location: '', description: '', 
-    coverImage: '', coverPosition: 'center', textColor: '#ffffff',
-    fontFamily: 'Montserrat' // 👈 ДОБАВЛЕНО
+    coverImage: '', coverPosition: 'center', textColor: '#ffffff', fontFamily: 'Montserrat'
   });
   
   const [localNames, setLocalNames] = useState<Record<string, string>>({});
@@ -61,7 +60,7 @@ export default function EventDashboard() {
             coverImage: json.event.coverImage || '/covers/cover1.jpg',
             coverPosition: json.event.coverPosition || 'center',
             textColor: json.event.textColor || '#ffffff',
-            fontFamily: json.event.fontFamily || 'Montserrat' // 👈 ПОДГРУЖАЕМ ШРИФТ
+            fontFamily: json.event.fontFamily || 'Montserrat'
           });
         }
       }
@@ -180,44 +179,45 @@ export default function EventDashboard() {
                 <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} 
                   className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} placeholder="Описание" rows={2} />
 
-                <div className="flex flex-wrap gap-4 items-center bg-black/5 p-4 rounded-xl border border-black/10 mt-2">
-                  <div className="flex-1 min-w-[150px]">
-                    <label className="text-sm opacity-70 mb-2 block">Обложка</label>
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                      {[1, 2, 3, 4].map(num => {
-                        const url = `/covers/cover${num}.jpg`;
-                        return (
-                          <img key={num} src={url} alt={`Cover ${num}`} onClick={() => { playClick(); setEditForm({...editForm, coverImage: url}); }}
-                            className={`w-14 h-14 object-cover rounded-lg cursor-pointer border-2 transition-all ${editForm.coverImage === url ? 'border-indigo-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`} />
-                        );
-                      })}
-                    </div>
+                {/* БЛОК 1: ВЫБОР ОБЛОЖКИ */}
+                <div className="bg-black/5 p-4 rounded-xl border border-black/10 mt-2">
+                  <label className="text-sm opacity-70 mb-3 block">Выберите обложку</label>
+                  <div className="flex gap-3 overflow-x-auto pb-2">
+                    {[1, 2, 3, 4].map(num => {
+                      const url = `/covers/cover${num}.jpg`;
+                      return (
+                        <img key={num} src={url} alt={`Cover ${num}`} onClick={() => { playClick(); setEditForm({...editForm, coverImage: url}); }}
+                          className={`w-16 h-16 object-cover rounded-xl cursor-pointer border-2 transition-all flex-shrink-0 ${editForm.coverImage === url ? 'border-indigo-500 scale-105 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'}`} />
+                      );
+                    })}
                   </div>
-                  
-                  <PositionPicker value={editForm.coverPosition} onChange={(pos) => setEditForm({...editForm, coverPosition: pos})} />
-                  
-                  <div className="flex flex-col items-center gap-2">
-                    <input type="color" value={editForm.textColor} onChange={(e) => setEditForm({...editForm, textColor: e.target.value})}
-                      className="w-10 h-10 rounded-full cursor-pointer border-0 bg-transparent p-0" title="Цвет текста" />
-                    <span className="text-xs opacity-60">Цвет</span>
-                  </div>
+                </div>
 
-                  {/* ВЫПАДАЮЩИЙ СПИСОК ШРИФТОВ */}
-                  <div className="flex flex-col items-center gap-2">
-                    <select
-                      value={editForm.fontFamily}
-                      onChange={(e) => { playClick(); setEditForm({ ...editForm, fontFamily: e.target.value }); }}
-                      className={`w-24 p-2 rounded-xl border text-sm focus:outline-none ${s.input}`}
-                    >
-                      <option value="Montserrat">Montserrat</option>
-                      <option value="Playfair Display">Playfair</option>
-                      <option value="Great Vibes">Great Vibes</option>
-                      <option value="Caveat">Caveat</option>
-                      <option value="Oswald">Oswald</option>
-                      <option value="Literata">Literata</option>
-                      <option value="Poiret One">Poiret One</option>
-                    </select>
-                    <span className="text-xs opacity-60">Шрифт</span>
+                {/* БЛОК 2: НАСТРОЙКИ ТЕКСТА */}
+                <div className="bg-black/5 p-4 rounded-xl border border-black/10">
+                  <label className="text-sm opacity-70 mb-4 block">Настройки текста</label>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex flex-col items-center flex-1">
+                      <PositionPicker value={editForm.coverPosition} onChange={(pos) => setEditForm({...editForm, coverPosition: pos})} />
+                    </div>
+                    <div className="flex flex-col items-center gap-2 flex-1 mt-2">
+                      <input type="color" value={editForm.textColor} onChange={(e) => setEditForm({...editForm, textColor: e.target.value})}
+                        className="w-12 h-12 rounded-full cursor-pointer border-0 bg-transparent p-0 shadow-sm" title="Цвет текста" />
+                      <span className="text-xs opacity-60">Цвет</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 flex-1 mt-2">
+                      <select value={editForm.fontFamily} onChange={(e) => { playClick(); setEditForm({ ...editForm, fontFamily: e.target.value }); }}
+                        className={`w-full max-w-[100px] p-3 rounded-xl border text-sm focus:outline-none ${s.input}`}>
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Playfair Display">Playfair</option>
+                        <option value="Great Vibes">Great Vibes</option>
+                        <option value="Caveat">Caveat</option>
+                        <option value="Oswald">Oswald</option>
+                        <option value="Literata">Literata</option>
+                        <option value="Poiret One">Poiret One</option>
+                      </select>
+                      <span className="text-xs opacity-60">Шрифт</span>
+                    </div>
                   </div>
                 </div>
 

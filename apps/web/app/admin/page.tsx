@@ -16,7 +16,7 @@ export default function CreateEventPage() {
     coverImage: '/covers/cover1.jpg',
     coverPosition: 'center',
     textColor: '#ffffff',
-    fontFamily: 'Montserrat' // 👈 ДОБАВЛЕНО
+    fontFamily: 'Montserrat'
   });
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -48,7 +48,7 @@ export default function CreateEventPage() {
 
   return (
     <main className={`min-h-screen p-6 flex items-center justify-center font-sans transition-colors duration-500 ${s.bg}`}>
-      <div className={`w-full max-w-md backdrop-blur-xl border rounded-3xl p-8 shadow-2xl transition-all duration-500 ${s.card}`}>
+      <div className={`w-full max-w-md backdrop-blur-xl border rounded-3xl p-6 sm:p-8 shadow-2xl transition-all duration-500 ${s.card}`}>
         <h1 className="text-3xl font-bold mb-6 tracking-tight">Создать событие</h1>
         
         <form onSubmit={handleCreate} className="flex flex-col gap-5">
@@ -65,48 +65,63 @@ export default function CreateEventPage() {
             <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})} className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} placeholder="Кафе" />
           </div>
 
-          <div className="flex flex-wrap gap-4 items-center bg-black/5 p-4 rounded-xl border border-black/10">
-            <div className="flex-1 min-w-[150px]">
-              <label className="text-sm opacity-70 mb-2 block">Обложка</label>
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {[1, 2, 3, 4].map(num => {
-                  const url = `/covers/cover${num}.jpg`;
-                  return (
-                    <img key={num} src={url} alt={`Cover ${num}`} onClick={() => { playClick(); setForm({...form, coverImage: url}); }}
-                      className={`w-12 h-12 object-cover rounded-lg cursor-pointer border-2 transition-all ${form.coverImage === url ? 'border-indigo-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`} />
-                  );
-                })}
-              </div>
-            </div>
-            
-            <PositionPicker value={form.coverPosition} onChange={(pos) => setForm({...form, coverPosition: pos})} />
-            
-            <div className="flex flex-col items-center gap-2">
-              <input type="color" value={form.textColor} onChange={(e) => setForm({...form, textColor: e.target.value})}
-                className="w-10 h-10 rounded-full cursor-pointer border-0 bg-transparent p-0" title="Цвет текста" />
-              <span className="text-xs opacity-60">Цвет</span>
-            </div>
-
-            {/* ВЫПАДАЮЩИЙ СПИСОК ШРИФТОВ */}
-            <div className="flex flex-col items-center gap-2">
-              <select
-                value={form.fontFamily}
-                onChange={(e) => { playClick(); setForm({ ...form, fontFamily: e.target.value }); }}
-                className={`w-24 p-2 rounded-xl border text-sm focus:outline-none ${s.input}`}
-              >
-                <option value="Montserrat">Montserrat</option>
-                <option value="Playfair Display">Playfair</option>
-                <option value="Great Vibes">Great Vibes</option>
-                <option value="Caveat">Caveat</option>
-                <option value="Oswald">Oswald</option>
-                <option value="Literata">Literata</option>
-                <option value="Poiret One">Poiret One</option>
-              </select>
-              <span className="text-xs opacity-60">Шрифт</span>
+          {/* БЛОК 1: ВЫБОР ОБЛОЖКИ */}
+          <div className="bg-black/5 p-4 rounded-xl border border-black/10">
+            <label className="text-sm opacity-70 mb-3 block">Выберите обложку</label>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {[1, 2, 3, 4].map(num => {
+                const url = `/covers/cover${num}.jpg`;
+                return (
+                  <img key={num} src={url} alt={`Cover ${num}`} onClick={() => { playClick(); setForm({...form, coverImage: url}); }}
+                    className={`w-16 h-16 object-cover rounded-xl cursor-pointer border-2 transition-all flex-shrink-0 ${form.coverImage === url ? 'border-indigo-500 scale-105 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'}`} />
+                );
+              })}
             </div>
           </div>
 
-          <button type="submit" disabled={loading} className={`mt-4 w-full py-4 font-semibold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg ${s.btn}`}>
+          {/* БЛОК 2: НАСТРОЙКИ ТЕКСТА */}
+          <div className="bg-black/5 p-4 rounded-xl border border-black/10">
+            <label className="text-sm opacity-70 mb-4 block">Настройки текста</label>
+            <div className="flex items-start justify-between gap-2">
+              
+              {/* Позиция */}
+              <div className="flex flex-col items-center flex-1">
+                <PositionPicker value={form.coverPosition} onChange={(pos) => setForm({...form, coverPosition: pos})} />
+              </div>
+
+              {/* Цвет */}
+              <div className="flex flex-col items-center gap-2 flex-1 mt-2">
+                <input 
+                  type="color" 
+                  value={form.textColor} 
+                  onChange={(e) => setForm({...form, textColor: e.target.value})}
+                  className="w-12 h-12 rounded-full cursor-pointer border-0 bg-transparent p-0 shadow-sm" 
+                  title="Цвет текста" 
+                />
+                <span className="text-xs opacity-60">Цвет</span>
+              </div>
+
+              {/* Шрифт */}
+              <div className="flex flex-col items-center gap-2 flex-1 mt-2">
+                <select
+                  value={form.fontFamily}
+                  onChange={(e) => { playClick(); setForm({ ...form, fontFamily: e.target.value }); }}
+                  className={`w-full max-w-[100px] p-3 rounded-xl border text-sm focus:outline-none ${s.input}`}
+                >
+                  <option value="Montserrat">Montserrat</option>
+                  <option value="Playfair Display">Playfair</option>
+                  <option value="Great Vibes">Great Vibes</option>
+                  <option value="Caveat">Caveat</option>
+                  <option value="Oswald">Oswald</option>
+                  <option value="Literata">Literata</option>
+                  <option value="Poiret One">Poiret One</option>
+                </select>
+                <span className="text-xs opacity-60">Шрифт</span>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" disabled={loading} className={`mt-2 w-full py-4 font-semibold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg ${s.btn}`}>
             {loading ? 'Создаем...' : 'Создать и перейти к гостям'}
           </button>
         </form>
