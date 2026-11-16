@@ -14,7 +14,8 @@ export default function CreateEventPage() {
   const [form, setForm] = useState({ 
     title: '', dateTime: '', location: '', description: '',
     coverImage: '/covers/cover1.jpg',
-    coverPosition: 'center' // По умолчанию
+    coverPosition: 'center',
+    textColor: '#ffffff' // Белый по умолчанию
   });
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -63,7 +64,7 @@ export default function CreateEventPage() {
             <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})} className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} placeholder="Кафе" />
           </div>
 
-          <div className="flex gap-4 items-center bg-black/5 p-4 rounded-xl border border-black/10">
+          <div className="flex flex-wrap gap-4 items-center bg-black/5 p-4 rounded-xl border border-black/10">
             <div className="flex-1">
               <label className="text-sm opacity-70 mb-2 block">Обложка</label>
               <div className="flex gap-2 overflow-x-auto pb-2">
@@ -77,6 +78,18 @@ export default function CreateEventPage() {
               </div>
             </div>
             <PositionPicker value={form.coverPosition} onChange={(pos) => setForm({...form, coverPosition: pos})} />
+            
+            {/* ВЫБОР ЦВЕТА ТЕКСТА */}
+            <div className="flex flex-col items-center gap-2">
+              <input 
+                type="color" 
+                value={form.textColor} 
+                onChange={(e) => setForm({...form, textColor: e.target.value})}
+                className="w-10 h-10 rounded-full cursor-pointer border-0 bg-transparent p-0"
+                title="Цвет текста"
+              />
+              <span className="text-xs opacity-60">Цвет текста</span>
+            </div>
           </div>
 
           <button type="submit" disabled={loading} className={`mt-4 w-full py-4 font-semibold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg ${s.btn}`}>

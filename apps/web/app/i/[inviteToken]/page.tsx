@@ -35,52 +35,55 @@ export default async function InvitePage({ params }: Props) {
   if (!data) return <div className="p-10 text-center text-white bg-black min-h-screen">Приглашение не найдено</div>;
   const { event, guests } = data;
 
-  // Цветовые темы
   const themes: Record<string, any> = {
-    classic: { bg: "bg-[#0a0a0a] text-white", card: "bg-white/5 border-white/10", textMuted: "text-gray-400", overlay: "from-black/90 via-black/50 to-transparent" },
-    light: { bg: "bg-gray-100 text-gray-900", card: "bg-white/80 border-white shadow-xl", textMuted: "text-gray-600", overlay: "from-white/90 via-white/50 to-transparent" },
-    kids: { bg: "bg-[#fef08a] text-indigo-900", card: "bg-white/60 border-4 border-white shadow-xl", textMuted: "text-indigo-700 font-medium", overlay: "from-white/90 via-white/60 to-transparent" }
+    classic: { bg: "bg-[#0a0a0a] text-white", card: "bg-white/5 border-white/10", textMuted: "text-gray-400" },
+    light: { bg: "bg-gray-100 text-gray-900", card: "bg-white/80 border-white shadow-xl", textMuted: "text-gray-600" },
+    kids: { bg: "bg-[#fef08a] text-indigo-900", card: "bg-white/60 border-4 border-white shadow-xl", textMuted: "text-indigo-700 font-medium" }
   };
   const theme = themes[event.templateId] || themes.kids;
 
-  // Выравнивание текста на основе выбранной позиции
   const flexPositions: Record<string, string> = {
-    'top-left': 'items-start justify-start text-left',
-    'top-center': 'items-start justify-center text-center',
-    'top-right': 'items-start justify-end text-right',
-    'center-left': 'items-center justify-start text-left',
-    'center': 'items-center justify-center text-center',
-    'center-right': 'items-center justify-end text-right',
-    'bottom-left': 'items-end justify-start text-left',
-    'bottom-center': 'items-end justify-center text-center',
-    'bottom-right': 'items-end justify-end text-right',
+    'top-left': 'items-start justify-start text-left', 'top-center': 'items-start justify-center text-center', 'top-right': 'items-start justify-end text-right',
+    'center-left': 'items-center justify-start text-left', 'center': 'items-center justify-center text-center', 'center-right': 'items-center justify-end text-right',
+    'bottom-left': 'items-end justify-start text-left', 'bottom-center': 'items-end justify-center text-center', 'bottom-right': 'items-end justify-end text-right',
   };
   const currentPos = flexPositions[event.coverPosition] || flexPositions['center'];
+
+  // УМНЫЙ ГРАДИЕНТ: если текст темный, делаем светлую подложку, и наоборот
+  const isDarkText = ['#000000', '#111827', '#312e81', '#3730a3'].includes(event.textColor?.toLowerCase());
+  const overlayGradient = isDarkText 
+    ? 'from-white/90 via-white/50 to-transparent' 
+    : 'from-black/90 via-black/50 to-transparent';
 
   return (
     <main className={`min-h-screen p-6 font-sans flex flex-col items-center ${theme.bg}`}>
       <div className="w-full max-w-md mt-6">
         
-        {/* Карточка с картинкой и текстом поверх */}
         <div className={`mb-6 relative overflow-hidden h-[450px] rounded-3xl shadow-2xl border border-white/20`}>
           
           {event.coverImage && (
             <img src={event.coverImage} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />
           )}
 
-          {/* Градиентная подложка для читаемости текста */}
-          <div className={`absolute inset-0 bg-gradient-to-t ${theme.overlay} opacity-80 pointer-events-none`}></div>
+          {/* Градиентная подложка (зависит от цвета текста) */}
+          <div className={`absolute inset-0 bg-gradient-to-t ${overlayGradient} opacity-80 pointer-events-none`}></div>
 
-          {/* Текст позиционируется в зависимости от event.coverPosition */}
+          {/* Текст с выбранным цветом */}
           <div className={`absolute inset-0 p-8 flex flex-col ${currentPos}`}>
-            <h1 className={`text-4xl font-bold mb-3 tracking-tight drop-shadow-md ${event.coverPosition?.includes('center') ? 'mx-auto' : ''}`}>
+            <h1 
+              className={`text-4xl font-bold mb-3 tracking-tight drop-shadow-md ${event.coverPosition?.includes('center') ? 'mx-auto' : ''}`}
+              style={{ color: event.textColor || '#ffffff' }} // <-- ПРИМЕНЯЕМ ЦВЕТ
+            >
               {event.title}
             </h1>
             
-            <div className={`space-y-1 ${theme.textMuted} text-sm font-medium drop-shadow-sm`}>
+            <div 
+              className={`space-y-1 text-sm font-medium drop-shadow-sm ${theme.textMuted}`}
+              style={{ color: event.textColor || '#ffffff', opacity: 0.9 }} // <-- ПРИМЕНЯЕМ ЦВЕТ
+            >
               <p>📅 {new Date(event.dateTime).toLocaleString('ru-RU')}</p>
               {event.location && <p>📍 {event.location}</p>}
-              {event.description && <p className="mt-2 text-xs opacity-90">{event.description}</p>}
+              {event.description && <p className="mt-2 text-xs">{event.description}</p>}
             </div>
           </div>
         </div>

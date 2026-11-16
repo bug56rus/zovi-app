@@ -24,8 +24,8 @@ app.get('/health', async () => ({ status: 'ok', message: 'API is running' }));
 
 // 2. Создание события (без авторизации)
 app.post('/events', async (request, reply) => {
-  // ДОБАВЛЕНО: coverPosition
-  const { title, dateTime, location, description, templateId, showGuests, coverImage, coverPosition } = request.body as any;
+  // ДОБАВЛЕНО: textColor
+  const { title, dateTime, location, description, templateId, showGuests, coverImage, coverPosition, textColor } = request.body as any;
   
   if (!title || !dateTime) return reply.status(400).send({ error: 'title и dateTime обязательны' });
 
@@ -43,7 +43,8 @@ app.post('/events', async (request, reply) => {
     templateId: templateId || 'classic',
     showGuests: showGuests ?? true,
     coverImage: coverImage || null,
-    coverPosition: coverPosition || 'center', // Сохраняем позицию текста
+    coverPosition: coverPosition || 'center',
+    textColor: textColor || '#ffffff', // Сохраняем цвет текста
   }).returning();
 
   return { event: newEvent, adminToken, publicToken };
@@ -78,8 +79,8 @@ app.get('/events/:eventId', async (request, reply) => {
 // 4. РЕДАКТИРОВАНИЕ СОБЫТИЯ
 app.patch('/events/:eventId', async (request, reply) => {
   const { eventId } = request.params as { eventId: string };
-  // ДОБАВЛЕНО: coverPosition
-  const { title, dateTime, location, description, coverImage, coverPosition } = request.body as any;
+  // ДОБАВЛЕНО: textColor
+  const { title, dateTime, location, description, coverImage, coverPosition, textColor } = request.body as any;
   const adminToken = request.headers['x-admin-token'] as string;
 
   const event = await db.query.events.findFirst({ where: eq(events.id, eventId) });
@@ -93,7 +94,8 @@ app.patch('/events/:eventId', async (request, reply) => {
     location: location !== undefined ? location : event.location,
     description: description !== undefined ? description : event.description,
     coverImage: coverImage !== undefined ? coverImage : event.coverImage,
-    coverPosition: coverPosition !== undefined ? coverPosition : event.coverPosition, // Обновляем позицию
+    coverPosition: coverPosition !== undefined ? coverPosition : event.coverPosition,
+    textColor: textColor !== undefined ? textColor : event.textColor, // Обновляем цвет
   }).where(eq(events.id, eventId)).returning();
 
   return { event: updatedEvent };
@@ -161,7 +163,8 @@ app.get('/i/:inviteToken', async (request, reply) => {
       templateId: event.templateId, 
       showGuests: event.showGuests,
       coverImage: event.coverImage,
-      coverPosition: event.coverPosition // <-- Передаем позицию гостю
+      coverPosition: event.coverPosition,
+      textColor: event.textColor // <-- Передаем цвет текста гостю
     },
     currentGuestStatus: invite.status,
     guests

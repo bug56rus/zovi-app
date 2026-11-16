@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "text_color" text DEFAULT '#ffffff';

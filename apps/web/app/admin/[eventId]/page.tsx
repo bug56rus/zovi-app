@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { playClick } from '../../utils/sound';
 import { useTheme } from '../../context/ThemeContext';
-import PositionPicker from '../../components/PositionPicker'; // 👈 ИМПОРТ КОМПОНЕНТА
+import PositionPicker from '../../components/PositionPicker';
 
 export default function EventDashboard() {
   const { eventId } = useParams();
@@ -24,7 +24,8 @@ export default function EventDashboard() {
     location: '', 
     description: '', 
     coverImage: '',
-    coverPosition: 'center' // 👈 ДОБАВЛЕНО ПОЛЕ
+    coverPosition: 'center',
+    textColor: '#ffffff' // 👈 ДОБАВЛЕНО ПОЛЕ ДЛЯ ЦВЕТА
   });
   
   // Хранилище для локальных имен
@@ -51,7 +52,7 @@ export default function EventDashboard() {
         const json = await res.json();
         setData(json);
         
-        // Обновляем форму актуальными данными (включая картинку и позицию)
+        // Обновляем форму актуальными данными
         if (!isEditing) {
           setEditForm({
             title: json.event.title,
@@ -59,7 +60,8 @@ export default function EventDashboard() {
             location: json.event.location || '',
             description: json.event.description || '',
             coverImage: json.event.coverImage || '/covers/cover1.jpg',
-            coverPosition: json.event.coverPosition || 'center' // 👈 ПОДГРУЖАЕМ ПОЗИЦИЮ
+            coverPosition: json.event.coverPosition || 'center',
+            textColor: json.event.textColor || '#ffffff' // 👈 ПОДГРУЖАЕМ ЦВЕТ
           });
         }
       }
@@ -85,7 +87,7 @@ export default function EventDashboard() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${eventId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken as string },
-        body: JSON.stringify(editForm) // 👈 ОТПРАВЛЯЕМ ВСЮ ФОРМУ (включая coverPosition)
+        body: JSON.stringify(editForm) // Отправляем всю форму (включая textColor)
       });
       if (res.ok) { 
         setIsEditing(false); 
@@ -178,8 +180,8 @@ export default function EventDashboard() {
                 <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} 
                   className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} placeholder="Описание" rows={2} />
 
-                {/* БЛОК ВЫБОРА ОБЛОЖКИ И ПОЗИЦИИ ТЕКСТА */}
-                <div className="flex gap-4 items-center bg-black/5 p-4 rounded-xl border border-black/10 mt-2">
+                {/* БЛОК ВЫБОРА ОБЛОЖКИ, ПОЗИЦИИ И ЦВЕТА */}
+                <div className="flex flex-wrap gap-4 items-center bg-black/5 p-4 rounded-xl border border-black/10 mt-2">
                   <div className="flex-1">
                     <label className="text-sm opacity-70 mb-2 block">Обложка</label>
                     <div className="flex gap-2 overflow-x-auto pb-2">
@@ -193,11 +195,23 @@ export default function EventDashboard() {
                     </div>
                   </div>
                   
-                  {/* КОМПОНЕНТ ВЫБОРА ПОЗИЦИИ (3x3) */}
+                  {/* ВЫБОР ПОЗИЦИИ */}
                   <PositionPicker 
                     value={editForm.coverPosition} 
                     onChange={(pos) => setEditForm({...editForm, coverPosition: pos})} 
                   />
+
+                  {/* ВЫБОР ЦВЕТА ТЕКСТА */}
+                  <div className="flex flex-col items-center gap-2">
+                    <input 
+                      type="color" 
+                      value={editForm.textColor} 
+                      onChange={(e) => setEditForm({...editForm, textColor: e.target.value})}
+                      className="w-10 h-10 rounded-full cursor-pointer border-0 bg-transparent p-0"
+                      title="Цвет текста"
+                    />
+                    <span className="text-xs opacity-60">Цвет</span>
+                  </div>
                 </div>
 
                 <div className="flex gap-2 mt-2">
