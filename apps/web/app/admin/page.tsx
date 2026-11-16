@@ -6,6 +6,17 @@ import { playClick } from '../utils/sound';
 import { useTheme } from '../context/ThemeContext';
 import PositionPicker from '../components/PositionPicker';
 
+// Массив со шрифтами для удобного рендера
+const FONT_OPTIONS = [
+  { name: 'Montserrat', var: 'var(--font-montserrat)' },
+  { name: 'Playfair Display', var: 'var(--font-playfair)' },
+  { name: 'Great Vibes', var: 'var(--font-great-vibes)' },
+  { name: 'Caveat', var: 'var(--font-caveat)' },
+  { name: 'Oswald', var: 'var(--font-oswald)' },
+  { name: 'Literata', var: 'var(--font-literata)' },
+  { name: 'Poiret One', var: 'var(--font-poiret)' }
+];
+
 export default function CreateEventPage() {
   const router = useRouter();
   const { theme } = useTheme();
@@ -56,11 +67,21 @@ export default function CreateEventPage() {
             <label className="text-sm opacity-70">Название</label>
             <input required type="text" value={form.title} onChange={e => setForm({...form, title: e.target.value})} className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} placeholder="День рождения" />
           </div>
+          
+          {/* 👇 ИСПРАВЛЕННОЕ ПОЛЕ ДАТЫ ДЛЯ iOS */}
           <div>
             <label className="text-sm opacity-70">Дата и время</label>
-            {/* ИСПРАВЛЕНО: добавлены классы block max-w-full min-w-0 */}
-            <input required type="datetime-local" value={form.dateTime} onChange={e => setForm({...form, dateTime: e.target.value})} className={`w-full block max-w-full min-w-0 mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} />
+            <div className="w-full overflow-hidden mt-2">
+              <input 
+                required 
+                type="datetime-local" 
+                value={form.dateTime} 
+                onChange={e => setForm({...form, dateTime: e.target.value})} 
+                className={`w-[100%] max-w-[100%] min-w-0 box-border appearance-none border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} 
+              />
+            </div>
           </div>
+
           <div>
             <label className="text-sm opacity-70">Место (опционально)</label>
             <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})} className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} placeholder="Кафе" />
@@ -100,19 +121,19 @@ export default function CreateEventPage() {
                 <span className="text-xs opacity-60">Цвет</span>
               </div>
 
+              {/* 👇 ПРЕДПРОСМОТР ШРИФТОВ */}
               <div className="flex flex-col items-center gap-2 flex-1 mt-2">
                 <select
                   value={form.fontFamily}
                   onChange={(e) => { playClick(); setForm({ ...form, fontFamily: e.target.value }); }}
                   className={`w-full max-w-[110px] p-3 rounded-xl border text-sm focus:outline-none truncate ${s.input}`}
+                  style={{ fontFamily: FONT_OPTIONS.find(f => f.name === form.fontFamily)?.var }}
                 >
-                  <option value="Montserrat">Montserrat</option>
-                  <option value="Playfair Display">Playfair</option>
-                  <option value="Great Vibes">Great Vibes</option>
-                  <option value="Caveat">Caveat</option>
-                  <option value="Oswald">Oswald</option>
-                  <option value="Literata">Literata</option>
-                  <option value="Poiret One">Poiret One</option>
+                  {FONT_OPTIONS.map(font => (
+                    <option key={font.name} value={font.name} style={{ fontFamily: font.var }}>
+                      {font.name}
+                    </option>
+                  ))}
                 </select>
                 <span className="text-xs opacity-60">Шрифт</span>
               </div>
