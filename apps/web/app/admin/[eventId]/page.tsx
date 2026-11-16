@@ -15,11 +15,8 @@ export default function EventDashboard() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
   
-  // Состояния для редактирования
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ title: '', dateTime: '', location: '', description: '' });
-
-  // Хранилище для локальных имен
+  const [editForm, setEditForm] = useState({ title: '', dateTime: '', location: '', description: '', coverImage: '' });
   const [localNames, setLocalNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -42,14 +39,13 @@ export default function EventDashboard() {
       if (res.ok) {
         const json = await res.json();
         setData(json);
-        // Если мы не в режиме редактирования, обновляем форму актуальными данными
         if (!isEditing) {
           setEditForm({
             title: json.event.title,
-            // Форматируем дату для input type="datetime-local" (YYYY-MM-DDThh:mm)
             dateTime: new Date(json.event.dateTime).toISOString().slice(0, 16),
             location: json.event.location || '',
-            description: json.event.description || ''
+            description: json.event.description || '',
+            coverImage: json.event.coverImage || '/covers/cover1.jpg'
           });
         }
       }
@@ -68,7 +64,6 @@ export default function EventDashboard() {
     return () => clearInterval(interval);
   }, [eventId]);
 
-  // ФУНКЦИЯ СОХРАНЕНИЯ ИЗМЕНЕНИЙ
   const saveChanges = async () => {
     playClick();
     const adminToken = localStorage.getItem(`admin_token_${eventId}`);
@@ -78,15 +73,9 @@ export default function EventDashboard() {
         headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken as string },
         body: JSON.stringify(editForm)
       });
-      if (res.ok) {
-        setIsEditing(false);
-        await fetchEventData(true); // Обновляем данные
-      } else {
-        alert('Ошибка при сохранении');
-      }
-    } catch (e) {
-      alert('Ошибка сети');
-    }
+      if (res.ok) { setIsEditing(false); await fetchEventData(true); } 
+      else alert('Ошибка при сохранении');
+    } catch (e) { alert('Ошибка сети'); }
   };
 
   const generateInvite = async () => {
@@ -159,22 +148,35 @@ export default function EventDashboard() {
     <main className={`min-h-screen p-6 font-sans transition-colors duration-500 ${s.bg}`}>
       <div className="max-w-2xl mx-auto pt-10">
         
-        {/* Шапка с режимом редактирования */}
         <div className="mb-8 flex justify-between items-start">
           <div className="w-full mr-4">
             {isEditing ? (
               <div className="flex flex-col gap-3">
                 <input type="text" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} 
                   className={`text-3xl font-bold w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} />
-                
                 <input type="datetime-local" value={editForm.dateTime} onChange={e => setEditForm({...editForm, dateTime: e.target.value})} 
                   className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} />
-                
                 <input type="text" value={editForm.location} onChange={e => setEditForm({...editForm, location: e.target.value})} 
                   className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} placeholder="Место" />
-                  
                 <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} 
-                  className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} placeholder="Описание (опционально)" rows={2} />
+                  className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} placeholder="Описание" rows={2} />
+
+                {/* ВЫБОР ОБЛОЖКИ В РЕЖИМЕ РЕДАКТИРОВАНИЯ */}
+                <div className="mt-2">
+                  <label className="text-sm opacity-70 mb-2 block">Обложка</label>
+                  <div className="flex gap-3 overflow-x-auto pb-2">
+                    {[1, 2, 3, 4].map(num => {
+                      const url = `/covers/cover${num}.jpg`;
+                      return (
+                        <img 
+                          key={num} src={url} alt={`Cover ${num}`}
+                          onClick={() => { playClick(); setEditForm({...editForm, coverImage: url}); }}
+                          className={`w-16 h-16 object-cover rounded-xl cursor-pointer border-4 transition-all ${editForm.coverImage === url ? 'border-indigo-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
 
                 <div className="flex gap-2 mt-2">
                   <button onClick={saveChanges} className={`px-6 py-2 font-semibold rounded-xl ${s.btnPrimary}`}>Сохранить</button>
@@ -185,12 +187,8 @@ export default function EventDashboard() {
               <>
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-4xl font-bold tracking-tight">{event.title}</h1>
-                  {/* Иконка карандаша */}
-                  <button 
-                    onClick={() => { playClick(); setIsEditing(true); }} 
-                    className={`p-2 text-lg leading-none rounded-full border transition-all shadow-sm active:scale-95 ${s.btnSecondary}`}
-                    title="Редактировать событие"
-                  >
+                  <button onClick={() => { playClick(); setIsEditing(true); }} 
+                    className={`p-2 text-lg leading-none rounded-full border transition-all shadow-sm active:scale-95 ${s.btnSecondary}`}>
                     ✏️
                   </button>
                 </div>
@@ -201,7 +199,6 @@ export default function EventDashboard() {
             )}
           </div>
 
-          {/* Кнопка обновления (скрываем в режиме редактирования) */}
           {!isEditing && (
             <button onClick={() => { playClick(); fetchEventData(true); }} disabled={refreshing}
               className={`p-3 rounded-full border transition-all ${s.card} ${refreshing ? 'opacity-50' : 'hover:scale-105 active:scale-95'}`}>
@@ -210,7 +207,6 @@ export default function EventDashboard() {
           )}
         </div>
 
-        {/* Статистика */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           <div className={`p-4 rounded-2xl text-center border ${s.card}`}>
             <div className="text-3xl font-bold text-green-500">{goingCount}</div>
@@ -230,7 +226,6 @@ export default function EventDashboard() {
           {generating ? 'Создаем...' : '+ Создать новую ссылку'}
         </button>
 
-        {/* Список гостей */}
         <h3 className="text-xl font-semibold mb-4">Ваши приглашения ({invites.length}):</h3>
         <div className="flex flex-col gap-3">
           {invites.map((invite: any, index: number) => {
@@ -239,9 +234,7 @@ export default function EventDashboard() {
               <div key={invite.id} className={`flex items-center justify-between p-4 border transition-all ${s.card}`}>
                 <div className="flex items-center gap-2">
                   <strong className="text-lg">{displayName}</strong> 
-                  <button onClick={() => renameGuest(invite.id)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 px-1" title="Переименовать">
-                    ✏️
-                  </button>
+                  <button onClick={() => renameGuest(invite.id)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 px-1" title="Переименовать">✏️</button>
                   <span className="ml-2">{invite.status === 'going' ? '✅' : invite.status === 'maybe' ? '🤔' : invite.status === 'not_going' ? '❌' : '⏳'}</span>
                 </div>
                 <div className="flex gap-2 text-sm">

@@ -1,6 +1,7 @@
 import RsvpButtons from './RsvpButtons';
 import type { Metadata, ResolvingMetadata } from 'next';
 
+// Функция для получения данных события с бэкенда
 async function getEventData(inviteToken: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/i/${inviteToken}`, {
     cache: 'no-store',
@@ -13,6 +14,7 @@ type Props = {
   params: Promise<{ inviteToken: string }>
 };
 
+// Генерация мета-тегов для красивого превью в MAX/Telegram/WhatsApp
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
@@ -21,10 +23,18 @@ export async function generateMetadata(
   const cleanToken = inviteToken.split(/[^a-zA-Z0-9]/)[0];
   const data = await getEventData(cleanToken);
 
-  if (!data) return { title: 'Приглашение не найдено | Зови' };
+  if (!data) {
+    return { title: 'Приглашение не найдено | Зови' };
+  }
 
   const { event } = data;
   const formattedDate = new Date(event.dateTime).toLocaleString('ru-RU');
+  
+  // Формируем АБСОЛЮТНЫЙ URL для картинки (мессенджерам нужен полный адрес с https://)
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bsbt-d92r-y79f.gw-1a.dockhost.net';
+  const ogImageUrl = event.coverImage 
+    ? `${baseUrl}${event.coverImage}` 
+    : `${baseUrl}/og-image.png`; // Если обложки нет, берем дефолтную
 
   return {
     title: `${event.title} — Приглашение | Зови`,
@@ -34,14 +44,17 @@ export async function generateMetadata(
       description: `Приглашение на мероприятие. Ждем вас!`,
       type: 'website',
       siteName: 'Зови',
-      images: ['/og-image.png'],
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: event.title }],
     },
   };
 }
 
 export default async function InvitePage({ params }: Props) {
   const { inviteToken } = await params;
+  
+  // Защита от мусора в ссылке (если скопировали вместе с текстом)
   const cleanToken = inviteToken.split(/[^a-zA-Z0-9]/)[0]; 
+  
   const data = await getEventData(cleanToken);
 
   if (!data) {
@@ -57,7 +70,7 @@ export default async function InvitePage({ params }: Props) {
 
   const { event, guests } = data;
 
-  // ВЫБОР СТИЛЕЙ В ЗАВИСИМОСТИ ОТ ТЕМЫ
+  // Выбор стилей в зависимости от темы
   const themes: Record<string, any> = {
     classic: {
       bg: "bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white",
@@ -82,28 +95,53 @@ export default async function InvitePage({ params }: Props) {
     }
   };
 
-  const theme = themes[event.templateId] || themes.classic;
+  const theme = themes[event.templateId] || themes.kids;
 
   return (
     <main className={`min-h-screen p-6 font-sans flex flex-col items-center transition-colors duration-500 ${theme.bg}`}>
       <div className="w-full max-w-md mt-10">
         
-        <div className={`p-8 mb-8 relative overflow-hidden ${theme.card}`}>
-          <h1 className="text-4xl font-bold mb-4 tracking-tight">{event.title}</h1>
-          <div className={`space-y-2 ${theme.textMuted}`}>
-            <p className="flex items-center gap-2"><span>📅</span> {new Date(event.dateTime).toLocaleString('ru-RU')}</p>
-            {event.location && <p className="flex items-center gap-2"><span>📍</span> {event.location}</p>}
-            {event.description && (
-              <p className={`mt-4 text-sm border-t pt-4 ${event.templateId === 'kids' ? 'border-indigo-200' : 'border-white/10'}`}>
-                {event.description}
+        {/* Карточка события с обложкой */}
+        <div className={`mb-8 relative overflow-hidden ${theme.card}`}>
+          
+          {/* ОБЛОЖКА (если выбрана) */}
+          {event.coverImage && (
+            <div className="w-full h-48 relative">
+              <img 
+                src={event.coverImage} 
+                alt={event.title} 
+                className="w-full h-full object-cover"
+              />
+              {/* Затемнение снизу для плавного перехода в карточку */}
+              <div className="absolute bottom-0 w-full h-16 bg-gradient-to-t from-black/20 to-transparent"></div>
+            </div>
+          )}
+
+          <div className="p-8">
+            <h1 className="text-4xl font-bold mb-4 tracking-tight">{event.title}</h1>
+            <div className={`space-y-2 ${theme.textMuted}`}>
+              <p className="flex items-center gap-2">
+                <span>📅</span> {new Date(event.dateTime).toLocaleString('ru-RU')}
               </p>
-            )}
+              {event.location && (
+                <p className="flex items-center gap-2">
+                  <span>📍</span> {event.location}
+                </p>
+              )}
+              {event.description && (
+                <p className={`mt-4 text-sm border-t pt-4 ${event.templateId === 'kids' ? 'border-indigo-200' : 'border-white/10'}`}>
+                  {event.description}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
+        {/* Блок с кнопками RSVP */}
         <h3 className="text-xl font-semibold mb-4 ml-2">Ваш ответ:</h3>
         <RsvpButtons inviteToken={cleanToken} currentStatus={data.currentGuestStatus} templateId={event.templateId} />
 
+        {/* Список гостей (если разрешено организатором) */}
         {event.showGuests && (
           <div className={`mt-8 p-6 ${theme.card}`}>
             <h3 className="text-lg font-semibold mb-4">Уже ответили ({guests.length}):</h3>
@@ -116,9 +154,18 @@ export default async function InvitePage({ params }: Props) {
                   {g.status === 'going' ? '✅ Идет' : g.status === 'maybe' ? '🤔 Думает' : '❌ Не идет'}
                 </li>
               ))}
+              {guests.length === 0 && (
+                <p className="text-sm opacity-60">Пока никто не ответил. Будьте первым!</p>
+              )}
             </ul>
           </div>
         )}
+        
+        {/* Футер */}
+        <div className="text-center mt-12 mb-6 opacity-50">
+          <p className="text-xs">Создано в приложении Зови</p>
+        </div>
+        
       </div>
     </main>
   );
