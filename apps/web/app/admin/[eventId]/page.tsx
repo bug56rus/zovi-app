@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { playClick } from '../../utils/sound';
 import { useTheme } from '../../context/ThemeContext';
+import PositionPicker from '../../components/PositionPicker'; // 👈 ИМПОРТ КОМПОНЕНТА
 
 export default function EventDashboard() {
   const { eventId } = useParams();
@@ -15,8 +16,18 @@ export default function EventDashboard() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
   
+  // Состояния для редактирования
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ title: '', dateTime: '', location: '', description: '', coverImage: '' });
+  const [editForm, setEditForm] = useState({ 
+    title: '', 
+    dateTime: '', 
+    location: '', 
+    description: '', 
+    coverImage: '',
+    coverPosition: 'center' // 👈 ДОБАВЛЕНО ПОЛЕ
+  });
+  
+  // Хранилище для локальных имен
   const [localNames, setLocalNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -39,13 +50,16 @@ export default function EventDashboard() {
       if (res.ok) {
         const json = await res.json();
         setData(json);
+        
+        // Обновляем форму актуальными данными (включая картинку и позицию)
         if (!isEditing) {
           setEditForm({
             title: json.event.title,
             dateTime: new Date(json.event.dateTime).toISOString().slice(0, 16),
             location: json.event.location || '',
             description: json.event.description || '',
-            coverImage: json.event.coverImage || '/covers/cover1.jpg'
+            coverImage: json.event.coverImage || '/covers/cover1.jpg',
+            coverPosition: json.event.coverPosition || 'center' // 👈 ПОДГРУЖАЕМ ПОЗИЦИЮ
           });
         }
       }
@@ -71,9 +85,12 @@ export default function EventDashboard() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${eventId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken as string },
-        body: JSON.stringify(editForm)
+        body: JSON.stringify(editForm) // 👈 ОТПРАВЛЯЕМ ВСЮ ФОРМУ (включая coverPosition)
       });
-      if (res.ok) { setIsEditing(false); await fetchEventData(true); } 
+      if (res.ok) { 
+        setIsEditing(false); 
+        await fetchEventData(true); 
+      } 
       else alert('Ошибка при сохранении');
     } catch (e) { alert('Ошибка сети'); }
   };
@@ -161,21 +178,26 @@ export default function EventDashboard() {
                 <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} 
                   className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} placeholder="Описание" rows={2} />
 
-                {/* ВЫБОР ОБЛОЖКИ В РЕЖИМЕ РЕДАКТИРОВАНИЯ */}
-                <div className="mt-2">
-                  <label className="text-sm opacity-70 mb-2 block">Обложка</label>
-                  <div className="flex gap-3 overflow-x-auto pb-2">
-                    {[1, 2, 3, 4].map(num => {
-                      const url = `/covers/cover${num}.jpg`;
-                      return (
-                        <img 
-                          key={num} src={url} alt={`Cover ${num}`}
-                          onClick={() => { playClick(); setEditForm({...editForm, coverImage: url}); }}
-                          className={`w-16 h-16 object-cover rounded-xl cursor-pointer border-4 transition-all ${editForm.coverImage === url ? 'border-indigo-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                        />
-                      );
-                    })}
+                {/* БЛОК ВЫБОРА ОБЛОЖКИ И ПОЗИЦИИ ТЕКСТА */}
+                <div className="flex gap-4 items-center bg-black/5 p-4 rounded-xl border border-black/10 mt-2">
+                  <div className="flex-1">
+                    <label className="text-sm opacity-70 mb-2 block">Обложка</label>
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      {[1, 2, 3, 4].map(num => {
+                        const url = `/covers/cover${num}.jpg`;
+                        return (
+                          <img key={num} src={url} alt={`Cover ${num}`} onClick={() => { playClick(); setEditForm({...editForm, coverImage: url}); }}
+                            className={`w-14 h-14 object-cover rounded-lg cursor-pointer border-2 transition-all ${editForm.coverImage === url ? 'border-indigo-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`} />
+                        );
+                      })}
+                    </div>
                   </div>
+                  
+                  {/* КОМПОНЕНТ ВЫБОРА ПОЗИЦИИ (3x3) */}
+                  <PositionPicker 
+                    value={editForm.coverPosition} 
+                    onChange={(pos) => setEditForm({...editForm, coverPosition: pos})} 
+                  />
                 </div>
 
                 <div className="flex gap-2 mt-2">

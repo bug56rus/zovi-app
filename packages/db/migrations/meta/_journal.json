@@ -15,6 +15,13 @@
       "when": 1794813264451,
       "tag": "0001_tired_wiccan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794817453861,
+      "tag": "0002_ambiguous_captain_stacy",
+      "breakpoints": true
     }
   ]
 }

@@ -13,6 +13,7 @@ export const events = pgTable('events', {
   coverImage: text('cover_image'),
   showGuests: boolean('show_guests').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  coverPosition: text('cover_position').default('center'),
 });
 
 export const invites = pgTable('invites', {

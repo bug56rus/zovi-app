@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { playClick } from '../utils/sound';
 import { useTheme } from '../context/ThemeContext';
+import PositionPicker from '../components/PositionPicker';
 
 export default function CreateEventPage() {
   const router = useRouter();
@@ -11,11 +12,9 @@ export default function CreateEventPage() {
   const [loading, setLoading] = useState(false);
   
   const [form, setForm] = useState({ 
-    title: '', 
-    dateTime: '', 
-    location: '', 
-    description: '',
-    coverImage: '/covers/cover1.jpg' // Картинка по умолчанию
+    title: '', dateTime: '', location: '', description: '',
+    coverImage: '/covers/cover1.jpg',
+    coverPosition: 'center' // По умолчанию
   });
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -64,23 +63,20 @@ export default function CreateEventPage() {
             <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})} className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} placeholder="Кафе" />
           </div>
 
-          {/* ВЫБОР ОБЛОЖКИ */}
-          <div>
-            <label className="text-sm opacity-70 mb-2 block">Обложка для приглашения</label>
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {[1, 2, 3, 4].map(num => {
-                const url = `/covers/cover${num}.jpg`;
-                return (
-                  <img 
-                    key={num}
-                    src={url}
-                    alt={`Cover ${num}`}
-                    onClick={() => { playClick(); setForm({...form, coverImage: url}); }}
-                    className={`w-20 h-20 object-cover rounded-xl cursor-pointer border-4 transition-all ${form.coverImage === url ? 'border-indigo-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                  />
-                );
-              })}
+          <div className="flex gap-4 items-center bg-black/5 p-4 rounded-xl border border-black/10">
+            <div className="flex-1">
+              <label className="text-sm opacity-70 mb-2 block">Обложка</label>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {[1, 2, 3, 4].map(num => {
+                  const url = `/covers/cover${num}.jpg`;
+                  return (
+                    <img key={num} src={url} alt={`Cover ${num}`} onClick={() => { playClick(); setForm({...form, coverImage: url}); }}
+                      className={`w-12 h-12 object-cover rounded-lg cursor-pointer border-2 transition-all ${form.coverImage === url ? 'border-indigo-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`} />
+                  );
+                })}
+              </div>
             </div>
+            <PositionPicker value={form.coverPosition} onChange={(pos) => setForm({...form, coverPosition: pos})} />
           </div>
 
           <button type="submit" disabled={loading} className={`mt-4 w-full py-4 font-semibold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg ${s.btn}`}>
