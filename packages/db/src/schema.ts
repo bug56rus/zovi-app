@@ -10,6 +10,7 @@ export const events = pgTable('events', {
   location: text('location'),
   description: text('description'),
   templateId: text('template_id').notNull().default('classic'),
+  coverImage: text('cover_image'),
   showGuests: boolean('show_guests').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
