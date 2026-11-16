@@ -5,8 +5,8 @@ import { useParams } from 'next/navigation';
 import { playClick } from '../../utils/sound';
 import { useTheme } from '../../context/ThemeContext';
 import PositionPicker from '../../components/PositionPicker';
+import PreviewCard from '../../components/PreviewCard'; // 👈 ИМПОРТ
 
-// Массив со шрифтами для удобного рендера
 const FONT_OPTIONS = [
   { name: 'Montserrat', var: 'var(--font-montserrat)' },
   { name: 'Playfair Display', var: 'var(--font-playfair)' },
@@ -184,20 +184,27 @@ export default function EventDashboard() {
                 <input type="text" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} 
                   className={`text-3xl font-bold w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} />
                 
-                {/* 👇 ЖЕСТКОЕ ИСПРАВЛЕНИЕ ДЛЯ iOS: appearance-none, box-border */}
                 <div className="w-full overflow-hidden">
-                  <input 
-                    type="datetime-local" 
-                    value={editForm.dateTime} 
-                    onChange={e => setEditForm({...editForm, dateTime: e.target.value})} 
-                    className={`w-[100%] max-w-[100%] min-w-0 box-border appearance-none border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} 
-                  />
+                  <input type="datetime-local" value={editForm.dateTime} onChange={e => setEditForm({...editForm, dateTime: e.target.value})} 
+                    className={`w-[100%] max-w-[100%] min-w-0 box-border appearance-none border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} />
                 </div>
                 
                 <input type="text" value={editForm.location} onChange={e => setEditForm({...editForm, location: e.target.value})} 
                   className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} placeholder="Место" />
                 <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} 
                   className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} placeholder="Описание" rows={2} />
+
+                {/* 👇 ЖИВОЙ ПРЕДПРОСМОТР ПРИ РЕДАКТИРОВАНИИ 👇 */}
+                <PreviewCard 
+                  title={editForm.title}
+                  dateTime={editForm.dateTime}
+                  location={editForm.location}
+                  description={editForm.description}
+                  coverImage={editForm.coverImage}
+                  coverPosition={editForm.coverPosition}
+                  textColor={editForm.textColor}
+                  fontFamily={editForm.fontFamily}
+                />
 
                 <div className="bg-black/5 p-4 rounded-xl border border-black/10 mt-2">
                   <label className="text-sm opacity-70 mb-3 block">Выберите обложку</label>
@@ -223,19 +230,12 @@ export default function EventDashboard() {
                         className="w-12 h-12 rounded-full cursor-pointer border-0 bg-transparent p-0 shadow-sm" title="Цвет текста" />
                       <span className="text-xs opacity-60">Цвет</span>
                     </div>
-                    
-                    {/* 👇 ПРЕДПРОСМОТР ШРИФТОВ */}
                     <div className="flex flex-col items-center gap-2 flex-1 mt-2">
-                      <select 
-                        value={editForm.fontFamily} 
-                        onChange={(e) => { playClick(); setEditForm({ ...editForm, fontFamily: e.target.value }); }}
+                      <select value={editForm.fontFamily} onChange={(e) => { playClick(); setEditForm({ ...editForm, fontFamily: e.target.value }); }}
                         className={`w-full max-w-[110px] p-3 rounded-xl border text-sm focus:outline-none truncate ${s.input}`}
-                        style={{ fontFamily: FONT_OPTIONS.find(f => f.name === editForm.fontFamily)?.var }}
-                      >
+                        style={{ fontFamily: FONT_OPTIONS.find(f => f.name === editForm.fontFamily)?.var }}>
                         {FONT_OPTIONS.map(font => (
-                          <option key={font.name} value={font.name} style={{ fontFamily: font.var }}>
-                            {font.name}
-                          </option>
+                          <option key={font.name} value={font.name} style={{ fontFamily: font.var }}>{font.name}</option>
                         ))}
                       </select>
                       <span className="text-xs opacity-60">Шрифт</span>
