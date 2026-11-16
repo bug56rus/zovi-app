@@ -1,28 +1,49 @@
 import RsvpButtons from './RsvpButtons';
 import type { Metadata, ResolvingMetadata } from 'next';
 
+// Функция для получения данных события с бэкенда
 async function getEventData(inviteToken: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/i/${inviteToken}`, { cache: 'no-store' });
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/i/${inviteToken}`, {
+    cache: 'no-store',
+  });
   if (!res.ok) return null;
   return res.json();
 }
 
-type Props = { params: Promise<{ inviteToken: string }> };
+type Props = {
+  params: Promise<{ inviteToken: string }>
+};
 
-export async function generateMetadata({ params }: Props, parent: ResolvingMetadata): Promise<Metadata> {
+// Генерация мета-тегов для красивого превью в MAX/Telegram/WhatsApp
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
   const { inviteToken } = await params;
   const cleanToken = inviteToken.split(/[^a-zA-Z0-9]/)[0];
   const data = await getEventData(cleanToken);
 
-  if (!data) return { title: 'Приглашение не найдено | Зови' };
+  if (!data) {
+    return { title: 'Приглашение не найдено | Зови' };
+  }
+
   const { event } = data;
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bsbt-d92r-y79f.gw-1a.dockhost.net';
+  const formattedDate = new Date(event.dateTime).toLocaleString('ru-RU');
   
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bsbt-d92r-y79f.gw-1a.dockhost.net';
+  const ogImageUrl = event.coverImage 
+    ? `${baseUrl}${event.coverImage}` 
+    : `${baseUrl}/og-image.png`;
+
   return {
     title: `${event.title} — Приглашение | Зови`,
+    description: `📅 ${formattedDate}${event.location ? ` · 📍 ${event.location}` : ''}. Подтвердите участие!`,
     openGraph: {
       title: event.title,
-      images: [{ url: event.coverImage ? `${baseUrl}${event.coverImage}` : `${baseUrl}/og-image.png` }],
+      description: `Приглашение на мероприятие. Ждем вас!`,
+      type: 'website',
+      siteName: 'Зови',
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: event.title }],
     },
   };
 }
@@ -32,8 +53,32 @@ export default async function InvitePage({ params }: Props) {
   const cleanToken = inviteToken.split(/[^a-zA-Z0-9]/)[0]; 
   const data = await getEventData(cleanToken);
 
-  if (!data) return <div className="p-10 text-center text-white bg-black min-h-screen">Приглашение не найдено</div>;
+  if (!data) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex items-center justify-center font-sans p-6">
+        <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-3xl text-center shadow-2xl">
+          <h1 className="text-3xl font-bold mb-2">Приглашение не найдено 😢</h1>
+          <p className="text-gray-400">Возможно, ссылка устарела или была удалена.</p>
+        </div>
+      </main>
+    );
+  }
+
   const { event, guests } = data;
+
+  // 👇 МАППИНГ ШРИФТОВ (переводим название из БД в CSS-переменную)
+  const fontMap: Record<string, string> = {
+    'Montserrat': 'var(--font-montserrat)',
+    'Playfair Display': 'var(--font-playfair)',
+    'Great Vibes': 'var(--font-great-vibes)',
+    'Caveat': 'var(--font-caveat)',
+    'Oswald': 'var(--font-oswald)',
+    'Literata': 'var(--font-literata)',
+    'Poiret One': 'var(--font-poiret)',
+  };
+
+  // Выбираем шрифт, если его нет — падаем в Montserrat
+  const currentFont = fontMap[event.fontFamily] || fontMap['Montserrat'];
 
   const themes: Record<string, any> = {
     classic: { bg: "bg-[#0a0a0a] text-white", card: "bg-white/5 border-white/10", textMuted: "text-gray-400" },
@@ -42,6 +87,7 @@ export default async function InvitePage({ params }: Props) {
   };
   const theme = themes[event.templateId] || themes.kids;
 
+  // Позиционирование текста
   const flexPositions: Record<string, string> = {
     'top-left': 'items-start justify-start text-left', 'top-center': 'items-start justify-center text-center', 'top-right': 'items-start justify-end text-right',
     'center-left': 'items-center justify-start text-left', 'center': 'items-center justify-center text-center', 'center-right': 'items-center justify-end text-right',
@@ -49,7 +95,7 @@ export default async function InvitePage({ params }: Props) {
   };
   const currentPos = flexPositions[event.coverPosition] || flexPositions['center'];
 
-  // УМНЫЙ ГРАДИЕНТ: если текст темный, делаем светлую подложку, и наоборот
+  // Умный градиент для читаемости
   const isDarkText = ['#000000', '#111827', '#312e81', '#3730a3'].includes(event.textColor?.toLowerCase());
   const overlayGradient = isDarkText 
     ? 'from-white/90 via-white/50 to-transparent' 
@@ -65,21 +111,23 @@ export default async function InvitePage({ params }: Props) {
             <img src={event.coverImage} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />
           )}
 
-          {/* Градиентная подложка (зависит от цвета текста) */}
           <div className={`absolute inset-0 bg-gradient-to-t ${overlayGradient} opacity-80 pointer-events-none`}></div>
 
-          {/* Текст с выбранным цветом */}
-          <div className={`absolute inset-0 p-8 flex flex-col ${currentPos}`}>
+          {/* 👇 ПРИМЕНЯЕМ ШРИФТ КО ВСЕМУ ТЕКСТОВОМУ БЛОКУ */}
+          <div 
+            className={`absolute inset-0 p-8 flex flex-col ${currentPos}`}
+            style={{ fontFamily: currentFont }} 
+          >
             <h1 
               className={`text-4xl font-bold mb-3 tracking-tight drop-shadow-md ${event.coverPosition?.includes('center') ? 'mx-auto' : ''}`}
-              style={{ color: event.textColor || '#ffffff' }} // <-- ПРИМЕНЯЕМ ЦВЕТ
+              style={{ color: event.textColor || '#ffffff' }}
             >
               {event.title}
             </h1>
             
             <div 
               className={`space-y-1 text-sm font-medium drop-shadow-sm ${theme.textMuted}`}
-              style={{ color: event.textColor || '#ffffff', opacity: 0.9 }} // <-- ПРИМЕНЯЕМ ЦВЕТ
+              style={{ color: event.textColor || '#ffffff', opacity: 0.9 }}
             >
               <p>📅 {new Date(event.dateTime).toLocaleString('ru-RU')}</p>
               {event.location && <p>📍 {event.location}</p>}
