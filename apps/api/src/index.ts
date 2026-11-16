@@ -10,9 +10,9 @@ dotenv.config();
 
 const app = Fastify({ logger: true });
 
-// Настройка CORS (разрешаем вашему сайту делать запросы к API с credentials)
+// Настройка CORS
 app.register(cors, { 
-  origin: 'https://bsbt-d92r-y79f.gw-1a.dockhost.net', 
+  origin: 'https://bsbt-d92r-y79f.gw-1a.dockhost.net', // Ваш публичный домен сайта
   credentials: true 
 });
 app.register(cookie);
@@ -24,7 +24,9 @@ app.get('/health', async () => ({ status: 'ok', message: 'API is running' }));
 
 // 2. Создание события (без авторизации)
 app.post('/events', async (request, reply) => {
-  const { title, dateTime, location, description, templateId, showGuests } = request.body as any;
+  // ДОБАВЛЕНО: coverImage
+  const { title, dateTime, location, description, templateId, showGuests, coverImage } = request.body as any;
+  
   if (!title || !dateTime) return reply.status(400).send({ error: 'title и dateTime обязательны' });
 
   const adminToken = crypto.randomUUID();
@@ -40,6 +42,7 @@ app.post('/events', async (request, reply) => {
     description,
     templateId: templateId || 'classic',
     showGuests: showGuests ?? true,
+    coverImage: coverImage || null, // Сохраняем картинку
   }).returning();
 
   return { event: newEvent, adminToken, publicToken };
@@ -71,30 +74,30 @@ app.get('/events/:eventId', async (request, reply) => {
   };
 });
 
-// 4. РЕДАКТИРОВАНИЕ СОБЫТИЯ (Новый эндпоинт)
+// 4. РЕДАКТИРОВАНИЕ СОБЫТИЯ
 app.patch('/events/:eventId', async (request, reply) => {
   const { eventId } = request.params as { eventId: string };
-  const { title, dateTime, location, description } = request.body as any;
+  // ДОБАВЛЕНО: coverImage
+  const { title, dateTime, location, description, coverImage } = request.body as any;
   const adminToken = request.headers['x-admin-token'] as string;
 
-  // Проверка прав
   const event = await db.query.events.findFirst({ where: eq(events.id, eventId) });
   if (!event || event.adminToken !== adminToken) {
     return reply.status(403).send({ error: 'Доступ запрещен' });
   }
 
-  // Обновляем поля (если они переданы, иначе оставляем старые)
   const [updatedEvent] = await db.update(events).set({
     title: title !== undefined ? title : event.title,
     dateTime: dateTime !== undefined ? new Date(dateTime) : event.dateTime,
     location: location !== undefined ? location : event.location,
     description: description !== undefined ? description : event.description,
+    coverImage: coverImage !== undefined ? coverImage : event.coverImage, // Обновляем картинку
   }).where(eq(events.id, eventId)).returning();
 
   return { event: updatedEvent };
 });
 
-// 5. Генерация инвайтов (только для админа)
+// 5. Генерация инвайтов
 app.post('/events/:eventId/invites', async (request, reply) => {
   const { eventId } = request.params as { eventId: string };
   const { count } = request.body as { count: number };
@@ -117,7 +120,7 @@ app.post('/events/:eventId/invites', async (request, reply) => {
   return { invites: newInvites.map(i => ({ id: i.id, inviteToken: i.inviteToken })) };
 });
 
-// 6. Удаление инвайта (только для админа)
+// 6. Удаление инвайта
 app.delete('/events/:eventId/invites/:inviteId', async (request, reply) => {
   const { eventId, inviteId } = request.params as { eventId: string, inviteId: string };
   const adminToken = request.headers['x-admin-token'] as string;
@@ -131,7 +134,7 @@ app.delete('/events/:eventId/invites/:inviteId', async (request, reply) => {
   return { ok: true };
 });
 
-// 7. Публичный просмотр события гостем (по inviteToken)
+// 7. Публичный просмотр события гостем
 app.get('/i/:inviteToken', async (request, reply) => {
   const { inviteToken } = request.params as { inviteToken: string };
 
@@ -148,7 +151,15 @@ app.get('/i/:inviteToken', async (request, reply) => {
   }
 
   return {
-    event: { title: event.title, dateTime: event.dateTime, location: event.location, description: event.description, templateId: event.templateId, showGuests: event.showGuests },
+    event: { 
+      title: event.title, 
+      dateTime: event.dateTime, 
+      location: event.location, 
+      description: event.description, 
+      templateId: event.templateId, 
+      showGuests: event.showGuests,
+      coverImage: event.coverImage // <-- Теперь гость тоже получает ссылку на картинку
+    },
     currentGuestStatus: invite.status,
     guests
   };
@@ -165,13 +176,11 @@ app.post('/i/:inviteToken/rsvp', async (request, reply) => {
   const invite = await db.query.invites.findFirst({ where: eq(invites.inviteToken, inviteToken) });
   if (!invite) return reply.status(404).send({ error: 'Приглашение не найдено' });
 
-  // Если у гостя уже есть magic_token в cookie для этого инвайта — обновляем
   if (cookieToken && invite.magicToken === cookieToken) {
     await db.update(invites).set({ status, updatedAt: new Date() }).where(eq(invites.id, invite.id));
     return { ok: true, status, magicToken: cookieToken };
   }
 
-  // Иначе генерируем новый magic_token
   const magicToken = crypto.randomUUID();
   await db.update(invites).set({ status, magicToken, updatedAt: new Date() }).where(eq(invites.id, invite.id));
 
