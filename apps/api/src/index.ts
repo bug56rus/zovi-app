@@ -3,30 +3,29 @@ import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
 import * as dotenv from 'dotenv';
 import { db, events, invites } from '@code/db';
-import crypto from 'crypto';
 import { eq, and } from 'drizzle-orm';
+import crypto from 'crypto';
 
 dotenv.config();
 
 const app = Fastify({ logger: true });
+
+// Настройка CORS (разрешаем вашему сайту делать запросы к API с credentials)
 app.register(cors, { 
   origin: 'https://bsbt-d92r-y79f.gw-1a.dockhost.net', 
   credentials: true 
 });
-app.register(cookie); // Подключаем cookie
+app.register(cookie);
 
-// Генератор коротких токенов (8 символов)
 const generateToken = () => crypto.randomBytes(4).toString('hex');
 
+// 1. Проверка здоровья API
 app.get('/health', async () => ({ status: 'ok', message: 'API is running' }));
 
-// 1. Создание события (без авторизации)
+// 2. Создание события (без авторизации)
 app.post('/events', async (request, reply) => {
   const { title, dateTime, location, description, templateId, showGuests } = request.body as any;
-
-  if (!title || !dateTime) {
-    return reply.status(400).send({ error: 'title и dateTime обязательны' });
-  }
+  if (!title || !dateTime) return reply.status(400).send({ error: 'title и dateTime обязательны' });
 
   const adminToken = crypto.randomUUID();
   const publicToken = generateToken();
@@ -46,42 +45,16 @@ app.post('/events', async (request, reply) => {
   return { event: newEvent, adminToken, publicToken };
 });
 
-// 2. Генерация инвайтов (только для админа)
-app.post('/events/:eventId/invites', async (request, reply) => {
-  const { eventId } = request.params as { eventId: string };
-  const { count } = request.body as { count: number };
-  const adminToken = request.headers['x-admin-token'] as string;
-
-  if (!count || count < 1) return reply.status(400).send({ error: 'Укажите count' });
-
-  const event = await db.query.events.findFirst({ where: eq(events.id, eventId) });
-  if (!event || event.adminToken !== adminToken) {
-    return reply.status(403).send({ error: 'Доступ запрещен' });
-  }
-
-  const newInvites = Array.from({ length: count }).map(() => ({
-    id: crypto.randomUUID(),
-    eventId,
-    inviteToken: generateToken(),
-  }));
-
-  await db.insert(invites).values(newInvites);
-
-  return { invites: newInvites.map(i => ({ id: i.id, inviteToken: i.inviteToken })) };
-});
-
-// 2.5. Просмотр события организатором (для панели управления)
+// 3. Получение данных события для панели администратора
 app.get('/events/:eventId', async (request, reply) => {
   const { eventId } = request.params as { eventId: string };
   const adminToken = request.headers['x-admin-token'] as string;
 
-  // Проверка прав
   const event = await db.query.events.findFirst({ where: eq(events.id, eventId) });
   if (!event || event.adminToken !== adminToken) {
     return reply.status(403).send({ error: 'Доступ запрещен' });
   }
 
-  // Получаем все инвайты для этого события
   const eventInvites = await db.query.invites.findMany({ 
     where: eq(invites.eventId, event.id),
     orderBy: (invites, { asc }) => [asc(invites.createdAt)]
@@ -98,9 +71,67 @@ app.get('/events/:eventId', async (request, reply) => {
   };
 });
 
+// 4. РЕДАКТИРОВАНИЕ СОБЫТИЯ (Новый эндпоинт)
+app.patch('/events/:eventId', async (request, reply) => {
+  const { eventId } = request.params as { eventId: string };
+  const { title, dateTime, location, description } = request.body as any;
+  const adminToken = request.headers['x-admin-token'] as string;
 
+  // Проверка прав
+  const event = await db.query.events.findFirst({ where: eq(events.id, eventId) });
+  if (!event || event.adminToken !== adminToken) {
+    return reply.status(403).send({ error: 'Доступ запрещен' });
+  }
 
-// 3. Публичный просмотр события гостем (по inviteToken)
+  // Обновляем поля (если они переданы, иначе оставляем старые)
+  const [updatedEvent] = await db.update(events).set({
+    title: title !== undefined ? title : event.title,
+    dateTime: dateTime !== undefined ? new Date(dateTime) : event.dateTime,
+    location: location !== undefined ? location : event.location,
+    description: description !== undefined ? description : event.description,
+  }).where(eq(events.id, eventId)).returning();
+
+  return { event: updatedEvent };
+});
+
+// 5. Генерация инвайтов (только для админа)
+app.post('/events/:eventId/invites', async (request, reply) => {
+  const { eventId } = request.params as { eventId: string };
+  const { count } = request.body as { count: number };
+  const adminToken = request.headers['x-admin-token'] as string;
+
+  if (!count || count < 1) return reply.status(400).send({ error: 'Укажите count' });
+
+  const event = await db.query.events.findFirst({ where: eq(events.id, eventId) });
+  if (!event || event.adminToken !== adminToken) {
+    return reply.status(403).send({ error: 'Доступ запрещен' });
+  }
+
+  const newInvites = Array.from({ length: count }).map(() => ({
+    id: crypto.randomUUID(), 
+    eventId, 
+    inviteToken: generateToken(),
+  }));
+
+  await db.insert(invites).values(newInvites);
+  return { invites: newInvites.map(i => ({ id: i.id, inviteToken: i.inviteToken })) };
+});
+
+// 6. Удаление инвайта (только для админа)
+app.delete('/events/:eventId/invites/:inviteId', async (request, reply) => {
+  const { eventId, inviteId } = request.params as { eventId: string, inviteId: string };
+  const adminToken = request.headers['x-admin-token'] as string;
+
+  const event = await db.query.events.findFirst({ where: eq(events.id, eventId) });
+  if (!event || event.adminToken !== adminToken) {
+    return reply.status(403).send({ error: 'Доступ запрещен' });
+  }
+
+  await db.delete(invites).where(and(eq(invites.id, inviteId), eq(invites.eventId, eventId)));
+  return { ok: true };
+});
+
+// 7. Публичный просмотр события гостем (по inviteToken)
 app.get('/i/:inviteToken', async (request, reply) => {
   const { inviteToken } = request.params as { inviteToken: string };
 
@@ -110,7 +141,6 @@ app.get('/i/:inviteToken', async (request, reply) => {
   const event = await db.query.events.findFirst({ where: eq(events.id, invite.eventId) });
   if (!event) return reply.status(404).send({ error: 'Событие не найдено' });
 
-  // Получаем обезличенный список гостей (если разрешено)
   let guests: any[] = [];
   if (event.showGuests) {
     const allInvites = await db.query.invites.findMany({ where: eq(invites.eventId, event.id) });
@@ -124,7 +154,7 @@ app.get('/i/:inviteToken', async (request, reply) => {
   };
 });
 
-// 4. RSVP (Гость подтверждает участие)
+// 8. RSVP (Гость подтверждает участие)
 app.post('/i/:inviteToken/rsvp', async (request, reply) => {
   const { inviteToken } = request.params as { inviteToken: string };
   const { status } = request.body as { status: 'going' | 'maybe' | 'not_going' };
@@ -145,24 +175,9 @@ app.post('/i/:inviteToken/rsvp', async (request, reply) => {
   const magicToken = crypto.randomUUID();
   await db.update(invites).set({ status, magicToken, updatedAt: new Date() }).where(eq(invites.id, invite.id));
 
-  // Ставим cookie (живет 1 год)
   reply.setCookie('guest_magic_token', magicToken, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 31536000 });
 
   return { ok: true, status, magicToken };
-});
-
-// 5. Удаление инвайта (для организатора)
-app.delete('/events/:eventId/invites/:inviteId', async (request, reply) => {
-  const { eventId, inviteId } = request.params as { eventId: string, inviteId: string };
-  const adminToken = request.headers['x-admin-token'] as string;
-
-  const event = await db.query.events.findFirst({ where: eq(events.id, eventId) });
-  if (!event || event.adminToken !== adminToken) {
-    return reply.status(403).send({ error: 'Доступ запрещен' });
-  }
-
-  await db.delete(invites).where(and(eq(invites.id, inviteId), eq(invites.eventId, eventId)));
-  return { ok: true };
 });
 
 const start = async () => {
