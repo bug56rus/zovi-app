@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "font_family" text DEFAULT 'Montserrat';

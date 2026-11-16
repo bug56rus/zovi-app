@@ -15,6 +15,7 @@ export const events = pgTable('events', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   coverPosition: text('cover_position').default('center'),
   textColor: text('text_color').default('#ffffff'),
+  fontFamily: text('font_family').default('Montserrat'),
 });
 
 export const invites = pgTable('invites', {

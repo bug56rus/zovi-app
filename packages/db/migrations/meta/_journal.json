@@ -29,6 +29,13 @@
       "when": 1794818401137,
       "tag": "0003_nosy_nighthawk",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794819731823,
+      "tag": "0004_nostalgic_lionheart",
+      "breakpoints": true
     }
   ]
 }

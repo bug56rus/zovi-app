@@ -15,7 +15,8 @@ export default function CreateEventPage() {
     title: '', dateTime: '', location: '', description: '',
     coverImage: '/covers/cover1.jpg',
     coverPosition: 'center',
-    textColor: '#ffffff' // Белый по умолчанию
+    textColor: '#ffffff',
+    fontFamily: 'Montserrat' // 👈 ДОБАВЛЕНО
   });
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -65,7 +66,7 @@ export default function CreateEventPage() {
           </div>
 
           <div className="flex flex-wrap gap-4 items-center bg-black/5 p-4 rounded-xl border border-black/10">
-            <div className="flex-1">
+            <div className="flex-1 min-w-[150px]">
               <label className="text-sm opacity-70 mb-2 block">Обложка</label>
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {[1, 2, 3, 4].map(num => {
@@ -77,18 +78,31 @@ export default function CreateEventPage() {
                 })}
               </div>
             </div>
+            
             <PositionPicker value={form.coverPosition} onChange={(pos) => setForm({...form, coverPosition: pos})} />
             
-            {/* ВЫБОР ЦВЕТА ТЕКСТА */}
             <div className="flex flex-col items-center gap-2">
-              <input 
-                type="color" 
-                value={form.textColor} 
-                onChange={(e) => setForm({...form, textColor: e.target.value})}
-                className="w-10 h-10 rounded-full cursor-pointer border-0 bg-transparent p-0"
-                title="Цвет текста"
-              />
-              <span className="text-xs opacity-60">Цвет текста</span>
+              <input type="color" value={form.textColor} onChange={(e) => setForm({...form, textColor: e.target.value})}
+                className="w-10 h-10 rounded-full cursor-pointer border-0 bg-transparent p-0" title="Цвет текста" />
+              <span className="text-xs opacity-60">Цвет</span>
+            </div>
+
+            {/* ВЫПАДАЮЩИЙ СПИСОК ШРИФТОВ */}
+            <div className="flex flex-col items-center gap-2">
+              <select
+                value={form.fontFamily}
+                onChange={(e) => { playClick(); setForm({ ...form, fontFamily: e.target.value }); }}
+                className={`w-24 p-2 rounded-xl border text-sm focus:outline-none ${s.input}`}
+              >
+                <option value="Montserrat">Montserrat</option>
+                <option value="Playfair Display">Playfair</option>
+                <option value="Great Vibes">Great Vibes</option>
+                <option value="Caveat">Caveat</option>
+                <option value="Oswald">Oswald</option>
+                <option value="Literata">Literata</option>
+                <option value="Poiret One">Poiret One</option>
+              </select>
+              <span className="text-xs opacity-60">Шрифт</span>
             </div>
           </div>
 

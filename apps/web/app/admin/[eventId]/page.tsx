@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react'; // 👈 Добавлен useRef
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { playClick } from '../../utils/sound';
 import { useTheme } from '../../context/ThemeContext';
@@ -17,8 +17,6 @@ export default function EventDashboard() {
   const [error, setError] = useState('');
   
   const [isEditing, setIsEditing] = useState(false);
-  
-  // 👇 ИСПОЛЬЗУЕМ REF, чтобы таймер всегда видел актуальное состояние
   const isEditingRef = useRef(isEditing);
 
   useEffect(() => {
@@ -27,7 +25,8 @@ export default function EventDashboard() {
 
   const [editForm, setEditForm] = useState({ 
     title: '', dateTime: '', location: '', description: '', 
-    coverImage: '', coverPosition: 'center', textColor: '#ffffff'
+    coverImage: '', coverPosition: 'center', textColor: '#ffffff',
+    fontFamily: 'Montserrat' // 👈 ДОБАВЛЕНО
   });
   
   const [localNames, setLocalNames] = useState<Record<string, string>>({});
@@ -51,9 +50,8 @@ export default function EventDashboard() {
       });
       if (res.ok) {
         const json = await res.json();
-        setData(json); // Данные (статистика гостей) обновляются всегда
+        setData(json);
         
-        // 👇 ИСПОЛЬЗУЕМ isEditingRef.current ВМЕСТО isEditing
         if (!isEditingRef.current) {
           setEditForm({
             title: json.event.title,
@@ -62,7 +60,8 @@ export default function EventDashboard() {
             description: json.event.description || '',
             coverImage: json.event.coverImage || '/covers/cover1.jpg',
             coverPosition: json.event.coverPosition || 'center',
-            textColor: json.event.textColor || '#ffffff'
+            textColor: json.event.textColor || '#ffffff',
+            fontFamily: json.event.fontFamily || 'Montserrat' // 👈 ПОДГРУЖАЕМ ШРИФТ
           });
         }
       }
@@ -182,7 +181,7 @@ export default function EventDashboard() {
                   className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} placeholder="Описание" rows={2} />
 
                 <div className="flex flex-wrap gap-4 items-center bg-black/5 p-4 rounded-xl border border-black/10 mt-2">
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-[150px]">
                     <label className="text-sm opacity-70 mb-2 block">Обложка</label>
                     <div className="flex gap-2 overflow-x-auto pb-2">
                       {[1, 2, 3, 4].map(num => {
@@ -195,20 +194,30 @@ export default function EventDashboard() {
                     </div>
                   </div>
                   
-                  <PositionPicker 
-                    value={editForm.coverPosition} 
-                    onChange={(pos) => setEditForm({...editForm, coverPosition: pos})} 
-                  />
-
+                  <PositionPicker value={editForm.coverPosition} onChange={(pos) => setEditForm({...editForm, coverPosition: pos})} />
+                  
                   <div className="flex flex-col items-center gap-2">
-                    <input 
-                      type="color" 
-                      value={editForm.textColor} 
-                      onChange={(e) => setEditForm({...editForm, textColor: e.target.value})}
-                      className="w-10 h-10 rounded-full cursor-pointer border-0 bg-transparent p-0"
-                      title="Цвет текста"
-                    />
+                    <input type="color" value={editForm.textColor} onChange={(e) => setEditForm({...editForm, textColor: e.target.value})}
+                      className="w-10 h-10 rounded-full cursor-pointer border-0 bg-transparent p-0" title="Цвет текста" />
                     <span className="text-xs opacity-60">Цвет</span>
+                  </div>
+
+                  {/* ВЫПАДАЮЩИЙ СПИСОК ШРИФТОВ */}
+                  <div className="flex flex-col items-center gap-2">
+                    <select
+                      value={editForm.fontFamily}
+                      onChange={(e) => { playClick(); setEditForm({ ...editForm, fontFamily: e.target.value }); }}
+                      className={`w-24 p-2 rounded-xl border text-sm focus:outline-none ${s.input}`}
+                    >
+                      <option value="Montserrat">Montserrat</option>
+                      <option value="Playfair Display">Playfair</option>
+                      <option value="Great Vibes">Great Vibes</option>
+                      <option value="Caveat">Caveat</option>
+                      <option value="Oswald">Oswald</option>
+                      <option value="Literata">Literata</option>
+                      <option value="Poiret One">Poiret One</option>
+                    </select>
+                    <span className="text-xs opacity-60">Шрифт</span>
                   </div>
                 </div>
 
