@@ -24,7 +24,6 @@ app.get('/health', async () => ({ status: 'ok', message: 'API is running' }));
 
 // 2. Создание события (без авторизации)
 app.post('/events', async (request, reply) => {
-  // ДОБАВЛЕНО: textX, textY
   const { title, dateTime, location, description, templateId, showGuests, coverImage, coverPosition, textColor, fontFamily, textX, textY } = request.body as any;
   
   if (!title || !dateTime) return reply.status(400).send({ error: 'title и dateTime обязательны' });
@@ -45,9 +44,10 @@ app.post('/events', async (request, reply) => {
     coverImage: coverImage || null,
     coverPosition: coverPosition || 'center',
     textColor: textColor || '#ffffff',
-    fontFamily: fontFamily || 'Great Vibes', // 👈 ИЗМЕНЕНО
-    textX: textX !== undefined ? textX : 50, // Сохраняем X (по умолчанию 50%)
-    textY: textY !== undefined ? textY : 50, // Сохраняем Y (по умолчанию 50%)
+    fontFamily: fontFamily || 'Great Vibes',
+    // 👇 ОКРУГЛЯЕМ ЗНАЧЕНИЯ ДО ЦЕЛЫХ ЧИСЕЛ
+    textX: textX !== undefined ? Math.round(Number(textX)) : 50,
+    textY: textY !== undefined ? Math.round(Number(textY)) : 50,
   }).returning();
 
   return { event: newEvent, adminToken, publicToken };
@@ -82,7 +82,6 @@ app.get('/events/:eventId', async (request, reply) => {
 // 4. РЕДАКТИРОВАНИЕ СОБЫТИЯ
 app.patch('/events/:eventId', async (request, reply) => {
   const { eventId } = request.params as { eventId: string };
-  // ДОБАВЛЕНО: textX, textY
   const { title, dateTime, location, description, coverImage, coverPosition, textColor, fontFamily, textX, textY } = request.body as any;
   const adminToken = request.headers['x-admin-token'] as string;
 
@@ -100,8 +99,9 @@ app.patch('/events/:eventId', async (request, reply) => {
     coverPosition: coverPosition !== undefined ? coverPosition : event.coverPosition,
     textColor: textColor !== undefined ? textColor : event.textColor,
     fontFamily: fontFamily !== undefined ? fontFamily : event.fontFamily,
-    textX: textX !== undefined ? textX : event.textX, // Обновляем X
-    textY: textY !== undefined ? textY : event.textY, // Обновляем Y
+    // 👇 ОКРУГЛЯЕМ ЗНАЧЕНИЯ ДО ЦЕЛЫХ ЧИСЕЛ
+    textX: textX !== undefined ? Math.round(Number(textX)) : event.textX,
+    textY: textY !== undefined ? Math.round(Number(textY)) : event.textY,
   }).where(eq(events.id, eventId)).returning();
 
   return { event: updatedEvent };
@@ -172,8 +172,8 @@ app.get('/i/:inviteToken', async (request, reply) => {
       coverPosition: event.coverPosition,
       textColor: event.textColor,
       fontFamily: event.fontFamily,
-      textX: event.textX, // <-- Передаем координаты гостю
-      textY: event.textY  // <-- Передаем координаты гостю
+      textX: event.textX, 
+      textY: event.textY  
     },
     currentGuestStatus: invite.status,
     guests
