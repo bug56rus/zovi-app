@@ -172,8 +172,11 @@ export default function EventDashboard() {
               <div className="flex flex-col gap-3">
                 <input type="text" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} 
                   className={`text-3xl font-bold w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} />
+                
+                {/* ИСПРАВЛЕНО: добавлены классы block max-w-full min-w-0 для поля даты */}
                 <input type="datetime-local" value={editForm.dateTime} onChange={e => setEditForm({...editForm, dateTime: e.target.value})} 
-                  className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} />
+                  className={`w-full block max-w-full min-w-0 border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} />
+                
                 <input type="text" value={editForm.location} onChange={e => setEditForm({...editForm, location: e.target.value})} 
                   className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} placeholder="Место" />
                 <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} 
@@ -207,7 +210,7 @@ export default function EventDashboard() {
                     </div>
                     <div className="flex flex-col items-center gap-2 flex-1 mt-2">
                       <select value={editForm.fontFamily} onChange={(e) => { playClick(); setEditForm({ ...editForm, fontFamily: e.target.value }); }}
-                        className={`w-full max-w-[100px] p-3 rounded-xl border text-sm focus:outline-none ${s.input}`}>
+                        className={`w-full max-w-[110px] p-3 rounded-xl border text-sm focus:outline-none truncate ${s.input}`}>
                         <option value="Montserrat">Montserrat</option>
                         <option value="Playfair Display">Playfair</option>
                         <option value="Great Vibes">Great Vibes</option>

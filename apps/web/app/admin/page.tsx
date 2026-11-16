@@ -58,7 +58,8 @@ export default function CreateEventPage() {
           </div>
           <div>
             <label className="text-sm opacity-70">Дата и время</label>
-            <input required type="datetime-local" value={form.dateTime} onChange={e => setForm({...form, dateTime: e.target.value})} className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} />
+            {/* ИСПРАВЛЕНО: добавлены классы block max-w-full min-w-0 */}
+            <input required type="datetime-local" value={form.dateTime} onChange={e => setForm({...form, dateTime: e.target.value})} className={`w-full block max-w-full min-w-0 mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} />
           </div>
           <div>
             <label className="text-sm opacity-70">Место (опционально)</label>
@@ -84,12 +85,10 @@ export default function CreateEventPage() {
             <label className="text-sm opacity-70 mb-4 block">Настройки текста</label>
             <div className="flex items-start justify-between gap-2">
               
-              {/* Позиция */}
               <div className="flex flex-col items-center flex-1">
                 <PositionPicker value={form.coverPosition} onChange={(pos) => setForm({...form, coverPosition: pos})} />
               </div>
 
-              {/* Цвет */}
               <div className="flex flex-col items-center gap-2 flex-1 mt-2">
                 <input 
                   type="color" 
@@ -101,12 +100,11 @@ export default function CreateEventPage() {
                 <span className="text-xs opacity-60">Цвет</span>
               </div>
 
-              {/* Шрифт */}
               <div className="flex flex-col items-center gap-2 flex-1 mt-2">
                 <select
                   value={form.fontFamily}
                   onChange={(e) => { playClick(); setForm({ ...form, fontFamily: e.target.value }); }}
-                  className={`w-full max-w-[100px] p-3 rounded-xl border text-sm focus:outline-none ${s.input}`}
+                  className={`w-full max-w-[110px] p-3 rounded-xl border text-sm focus:outline-none truncate ${s.input}`}
                 >
                   <option value="Montserrat">Montserrat</option>
                   <option value="Playfair Display">Playfair</option>
