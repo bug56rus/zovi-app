@@ -4,8 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { playClick } from '../../utils/sound';
 import { useTheme } from '../../context/ThemeContext';
-import PositionPicker from '../../components/PositionPicker';
-import PreviewCard from '../../components/PreviewCard'; // 👈 ИМПОРТ
+import PreviewCard from '../../components/PreviewCard'; // 👈 Импорт перетаскивания
 
 const FONT_OPTIONS = [
   { name: 'Montserrat', var: 'var(--font-montserrat)' },
@@ -34,9 +33,11 @@ export default function EventDashboard() {
     isEditingRef.current = isEditing;
   }, [isEditing]);
 
+  // 👇 Теперь в форме есть textX и textY
   const [editForm, setEditForm] = useState({ 
     title: '', dateTime: '', location: '', description: '', 
-    coverImage: '', coverPosition: 'center', textColor: '#ffffff', fontFamily: 'Montserrat'
+    coverImage: '', textColor: '#ffffff', fontFamily: 'Great Vibes',
+    textX: 50, textY: 50
   });
   
   const [localNames, setLocalNames] = useState<Record<string, string>>({});
@@ -69,9 +70,10 @@ export default function EventDashboard() {
             location: json.event.location || '',
             description: json.event.description || '',
             coverImage: json.event.coverImage || '/covers/cover1.jpg',
-            coverPosition: json.event.coverPosition || 'center',
             textColor: json.event.textColor || '#ffffff',
-            fontFamily: json.event.fontFamily || 'Montserrat'
+            fontFamily: json.event.fontFamily || 'Great Vibes',
+            textX: json.event.textX ?? 50, // 👈 Загружаем координаты из БД
+            textY: json.event.textY ?? 50
           });
         }
       }
@@ -191,19 +193,22 @@ export default function EventDashboard() {
                 
                 <input type="text" value={editForm.location} onChange={e => setEditForm({...editForm, location: e.target.value})} 
                   className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} placeholder="Место" />
+                
                 <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} 
-                  className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} placeholder="Описание" rows={2} />
+                  className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} placeholder="Описание (дресс-код, тема и т.д.)" rows={2} />
 
-                {/* 👇 ЖИВОЙ ПРЕДПРОСМОТР ПРИ РЕДАКТИРОВАНИИ 👇 */}
+                {/* 👇 ЖИВОЙ ПРЕДПРОСМОТР С ПЕРЕТАСКИВАНИЕМ ПРИ РЕДАКТИРОВАНИИ 👇 */}
                 <PreviewCard 
                   title={editForm.title}
                   dateTime={editForm.dateTime}
                   location={editForm.location}
                   description={editForm.description}
                   coverImage={editForm.coverImage}
-                  coverPosition={editForm.coverPosition}
                   textColor={editForm.textColor}
                   fontFamily={editForm.fontFamily}
+                  textX={editForm.textX}
+                  textY={editForm.textY}
+                  onPositionChange={(x: number, y: number) => setEditForm({ ...editForm, textX: x, textY: y })}
                 />
 
                 <div className="bg-black/5 p-4 rounded-xl border border-black/10 mt-2">
@@ -221,18 +226,15 @@ export default function EventDashboard() {
 
                 <div className="bg-black/5 p-4 rounded-xl border border-black/10">
                   <label className="text-sm opacity-70 mb-4 block">Настройки текста</label>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex flex-col items-center flex-1">
-                      <PositionPicker value={editForm.coverPosition} onChange={(pos) => setEditForm({...editForm, coverPosition: pos})} />
-                    </div>
-                    <div className="flex flex-col items-center gap-2 flex-1 mt-2">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col items-center gap-2 flex-1">
                       <input type="color" value={editForm.textColor} onChange={(e) => setEditForm({...editForm, textColor: e.target.value})}
                         className="w-12 h-12 rounded-full cursor-pointer border-0 bg-transparent p-0 shadow-sm" title="Цвет текста" />
                       <span className="text-xs opacity-60">Цвет</span>
                     </div>
-                    <div className="flex flex-col items-center gap-2 flex-1 mt-2">
+                    <div className="flex flex-col items-center gap-2 flex-1">
                       <select value={editForm.fontFamily} onChange={(e) => { playClick(); setEditForm({ ...editForm, fontFamily: e.target.value }); }}
-                        className={`w-full max-w-[110px] p-3 rounded-xl border text-sm focus:outline-none truncate ${s.input}`}
+                        className={`w-full max-w-[130px] p-3 rounded-xl border text-sm focus:outline-none truncate ${s.input}`}
                         style={{ fontFamily: FONT_OPTIONS.find(f => f.name === editForm.fontFamily)?.var }}>
                         {FONT_OPTIONS.map(font => (
                           <option key={font.name} value={font.name} style={{ fontFamily: font.var }}>{font.name}</option>
