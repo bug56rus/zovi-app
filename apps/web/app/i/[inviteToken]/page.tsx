@@ -66,7 +66,7 @@ export default async function InvitePage({ params }: Props) {
 
   const { event, guests } = data;
 
-  // 👇 МАППИНГ ШРИФТОВ (переводим название из БД в CSS-переменную)
+  // Маппинг шрифтов
   const fontMap: Record<string, string> = {
     'Montserrat': 'var(--font-montserrat)',
     'Playfair Display': 'var(--font-playfair)',
@@ -77,9 +77,9 @@ export default async function InvitePage({ params }: Props) {
     'Poiret One': 'var(--font-poiret)',
   };
 
-  // Выбираем шрифт, если его нет — падаем в Montserrat
-  const currentFont = fontMap[event.fontFamily] || fontMap['Montserrat'];
+  const currentFont = fontMap[event.fontFamily] || fontMap['Great Vibes'];
 
+  // Темы оформления
   const themes: Record<string, any> = {
     classic: { bg: "bg-[#0a0a0a] text-white", card: "bg-white/5 border-white/10", textMuted: "text-gray-400" },
     light: { bg: "bg-gray-100 text-gray-900", card: "bg-white/80 border-white shadow-xl", textMuted: "text-gray-600" },
@@ -87,15 +87,7 @@ export default async function InvitePage({ params }: Props) {
   };
   const theme = themes[event.templateId] || themes.kids;
 
-  // Позиционирование текста
-  const flexPositions: Record<string, string> = {
-    'top-left': 'items-start justify-start text-left', 'top-center': 'items-start justify-center text-center', 'top-right': 'items-start justify-end text-right',
-    'center-left': 'items-center justify-start text-left', 'center': 'items-center justify-center text-center', 'center-right': 'items-center justify-end text-right',
-    'bottom-left': 'items-end justify-start text-left', 'bottom-center': 'items-end justify-center text-center', 'bottom-right': 'items-end justify-end text-right',
-  };
-  const currentPos = flexPositions[event.coverPosition] || flexPositions['center'];
-
-  // Умный градиент для читаемости
+  // Умный градиент для читаемости (зависит от цвета текста)
   const isDarkText = ['#000000', '#111827', '#312e81', '#3730a3'].includes(event.textColor?.toLowerCase());
   const overlayGradient = isDarkText 
     ? 'from-white/90 via-white/50 to-transparent' 
@@ -105,6 +97,7 @@ export default async function InvitePage({ params }: Props) {
     <main className={`min-h-screen p-6 font-sans flex flex-col items-center ${theme.bg}`}>
       <div className="w-full max-w-md mt-6">
         
+        {/* Карточка с картинкой и текстом поверх */}
         <div className={`mb-6 relative overflow-hidden h-[450px] rounded-3xl shadow-2xl border border-white/20`}>
           
           {event.coverImage && (
@@ -113,20 +106,25 @@ export default async function InvitePage({ params }: Props) {
 
           <div className={`absolute inset-0 bg-gradient-to-t ${overlayGradient} opacity-80 pointer-events-none`}></div>
 
-          {/* 👇 ПРИМЕНЯЕМ ШРИФТ КО ВСЕМУ ТЕКСТОВОМУ БЛОКУ */}
+          {/* 👇 ТЕКСТ ПОЗИЦИОНИРУЕТСЯ ПО КООРДИНАТАМ X И Y (КАК ПРИ ПЕРЕТАСКИВАНИИ) */}
           <div 
-            className={`absolute inset-0 p-8 flex flex-col ${currentPos}`}
-            style={{ fontFamily: currentFont }} 
+            className="absolute flex flex-col w-[85%]"
+            style={{ 
+              left: `${event.textX !== null && event.textX !== undefined ? event.textX : 50}%`, 
+              top: `${event.textY !== null && event.textY !== undefined ? event.textY : 50}%`, 
+              transform: 'translate(-50%, -50%)',
+              fontFamily: currentFont 
+            }}
           >
             <h1 
-              className={`text-4xl font-bold mb-3 tracking-tight drop-shadow-md ${event.coverPosition?.includes('center') ? 'mx-auto' : ''}`}
+              className="text-4xl font-bold mb-2 tracking-tight drop-shadow-md text-center leading-tight"
               style={{ color: event.textColor || '#ffffff' }}
             >
               {event.title}
             </h1>
             
             <div 
-              className={`space-y-1 text-sm font-medium drop-shadow-sm ${theme.textMuted}`}
+              className={`space-y-1 text-sm font-medium drop-shadow-sm text-center ${theme.textMuted}`}
               style={{ color: event.textColor || '#ffffff', opacity: 0.9 }}
             >
               <p>📅 {new Date(event.dateTime).toLocaleString('ru-RU')}</p>
