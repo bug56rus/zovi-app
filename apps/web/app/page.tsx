@@ -51,7 +51,8 @@ export default function Home() {
           Создавай стильные приглашения и собирай друзей. Без сбора персональных данных.
         </p>
 
-        
+        <div className="flex flex-wrap justify-center gap-3 mb-10 w-full">
+          
           <div className={`flex flex-col items-center p-4 rounded-2xl border backdrop-blur-md w-[30%] ${cardBg}`}>
             <span className="text-2xl mb-1">✨</span>
             <span className="text-xs font-bold uppercase tracking-wider opacity-70">Красиво</span>
