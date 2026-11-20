@@ -48,7 +48,7 @@ export default function Home() {
         </h1>
         
         <p className="text-xl font-medium mb-10 opacity-80">
-          Создавай стильные приглашения и собирай друзей. Без сбора персональных данных.
+          Создавай стильные приглашения и собирай друзей.
         </p>
 
         <div className="flex flex-wrap justify-center gap-3 mb-10 w-full">
