@@ -76,7 +76,7 @@ export default function Home() {
       </div>
 
       <div className="absolute bottom-6 z-10 text-xs opacity-40">
-        © {new Date().getFullYear()} Зови. Сделано с любовью.
+        © {new Date().getFullYear()} Современные приглашения без лишнего.
       </div>
 
     </main>
