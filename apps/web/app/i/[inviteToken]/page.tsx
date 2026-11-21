@@ -1,7 +1,6 @@
 import RsvpButtons from './RsvpButtons';
 import type { Metadata, ResolvingMetadata } from 'next';
 
-// 1. Функция получения данных
 async function getEventData(inviteToken: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/i/${inviteToken}`, {
     cache: 'no-store',
@@ -14,7 +13,6 @@ type Props = {
   params: Promise<{ inviteToken: string }>
 };
 
-// 2. Генерация превью для мессенджеров
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
@@ -43,7 +41,6 @@ export async function generateMetadata(
   };
 }
 
-// 3. Основной компонент страницы
 export default async function InvitePage({ params }: Props) {
   const { inviteToken } = await params;
   const cleanToken = inviteToken.split(/[^a-zA-Z0-9]/)[0]; 
@@ -85,12 +82,14 @@ export default async function InvitePage({ params }: Props) {
     ? 'from-white/90 via-white/40 to-transparent' 
     : 'from-black/90 via-black/40 to-transparent';
 
-  // 4. Возврат JSX
   return (
     <main className={`min-h-[100dvh] flex flex-col items-center justify-center p-4 font-sans ${theme.bg}`}>
       
-      {/* КАРТОЧКА ОТКРЫТКИ (Строго 3:4, влезает целиком) */}
-      <div className="relative w-full max-w-md aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl border border-black/10">
+      {/* КАРТОЧКА ОТКРЫТКИ (Строго 3:4) */}
+      <div 
+        style={{ containerType: 'inline-size' }}
+        className="relative w-full max-w-md aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl border border-black/10"
+      >
         
         {event.coverImage && (
           <img src={event.coverImage} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />
@@ -109,24 +108,25 @@ export default async function InvitePage({ params }: Props) {
           }}
         >
           <h1 
-            className="text-4xl font-bold mb-2 tracking-tight drop-shadow-lg text-center leading-tight"
+            className="text-[8cqw] font-bold mb-[1.5cqw] tracking-tight drop-shadow-lg text-center leading-tight"
             style={{ color: event.textColor || '#ffffff' }}
           >
             {event.title}
           </h1>
           
+          {/* УВЕЛИЧЕННЫЙ ШРИФТ ДЛЯ ДАТЫ, МЕСТА И ОПИСАНИЯ */}
           <div 
-            className="space-y-1 text-sm font-medium drop-shadow-md text-center"
+            className="space-y-[1.5cqw] text-[7cqw] font-medium drop-shadow-md text-center"
             style={{ color: event.textColor || '#ffffff', opacity: 0.95 }}
           >
             <p>📅 {new Date(event.dateTime).toLocaleString('ru-RU')}</p>
             {event.location && <p>📍 {event.location}</p>}
-            {event.description && <p className="mt-2 text-xs opacity-90">{event.description}</p>}
+            {event.description && <p className="mt-[1.5cqw] text-[6cqw] opacity-90 leading-tight">{event.description}</p>}
           </div>
         </div>
       </div>
 
-      {/* КНОПКИ И СПИСОК ГОСТЕЙ (Снизу под открыткой) */}
+      {/* КНОПКИ И СПИСОК ГОСТЕЙ */}
       <div className={`w-full max-w-md mt-6 rounded-3xl backdrop-blur-xl shadow-xl p-6 flex flex-col gap-5 ${theme.sheet}`}>
         <div>
           <h3 className="text-lg font-semibold mb-3 text-center">Подтвердите участие</h3>

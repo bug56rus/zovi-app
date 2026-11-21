@@ -65,7 +65,7 @@ export default function PreviewCard({
       
       <div 
         ref={cardRef}
-        style={{ containerType: 'inline-size' }} // 👈 ВКЛЮЧАЕМ КОНТЕЙНЕРНЫЕ ЗАПРОСЫ
+        style={{ containerType: 'inline-size' }}
         className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-xl border border-black/10 select-none touch-none bg-gray-100"
       >
         {coverImage ? (
@@ -100,21 +100,21 @@ export default function PreviewCard({
             </svg>
           </div>
 
-          {/* 👇 ШРИФТЫ В ЕДИНИЦАХ cqw (ПРОПОРЦИОНАЛЬНО ШИРИНЕ) */}
           <h1 
-            className="text-[8cqw] font-bold mb-[1cqw] drop-shadow-md leading-tight text-center pointer-events-none"
+            className="text-[8cqw] font-bold mb-[1.5cqw] drop-shadow-md leading-tight text-center pointer-events-none"
             style={{ color: textColor || '#ffffff' }}
           >
             {title || 'Название'}
           </h1>
           
+          {/* УВЕЛИЧЕННЫЙ ШРИФТ ДЛЯ ДАТЫ, МЕСТА И ОПИСАНИЯ */}
           <div 
-            className="space-y-[1cqw] text-[3.5cqw] font-medium drop-shadow-sm opacity-90 text-center pointer-events-none"
+            className="space-y-[1.5cqw] text-[7cqw] font-medium drop-shadow-sm opacity-90 text-center pointer-events-none"
             style={{ color: textColor || '#ffffff' }}
           >
             <p>📅 {displayDate}</p>
             {location && <p>📍 {location}</p>}
-            {description && <p className="mt-[1cqw] text-[3cqw] opacity-80">{description}</p>}
+            {description && <p className="mt-[1.5cqw] text-[6cqw] opacity-80 leading-tight">{description}</p>}
           </div>
         </div>
       </div>
