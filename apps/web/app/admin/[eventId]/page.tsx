@@ -17,7 +17,6 @@ const FONT_OPTIONS = [
   { name: 'Poiret One', var: 'var(--font-poiret)' }
 ];
 
-// Маппинг шрифтов для полноэкранного просмотра
 const fontMap: Record<string, string> = {
   'Montserrat': 'var(--font-montserrat)',
   'Playfair Display': 'var(--font-playfair)',
@@ -38,7 +37,6 @@ export default function EventDashboard() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
   
-  // Состояние для полноэкранного просмотра
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -190,7 +188,6 @@ export default function EventDashboard() {
   const notGoingCount = invites.filter((i: any) => i.status === 'not_going').length;
   const maybeCount = invites.filter((i: any) => i.status === 'maybe').length;
 
-  // Данные для полноэкранного превью
   const currentFont = fontMap[event.fontFamily] || fontMap['Great Vibes'];
   const isDarkText = ['#000000', '#111827', '#312e81', '#3730a3'].includes(event.textColor?.toLowerCase());
   const overlayGradient = isDarkText 
@@ -200,7 +197,7 @@ export default function EventDashboard() {
   return (
     <main className={`min-h-screen p-6 font-sans transition-colors duration-500 ${s.bg}`}>
       
-      {/* ПОЛНОЭКРАННЫЙ ПРОСМОТР (МОДАЛКА) */}
+      {/* МОДАЛКА ПОЛНОЭКРАННОГО ПРОСМОТРА */}
       {isPreviewOpen && (
         <div 
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
@@ -208,7 +205,7 @@ export default function EventDashboard() {
         >
           <div 
             className="relative w-full max-w-md aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl border border-white/20"
-            onClick={(e) => e.stopPropagation()} // Клик внутри карточки не закрывает модалку
+            onClick={(e) => e.stopPropagation()}
           >
             {event.coverImage && (
               <img src={event.coverImage} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />
@@ -240,7 +237,6 @@ export default function EventDashboard() {
               </div>
             </div>
 
-            {/* Кнопка закрытия */}
             <button 
               onClick={() => { playClick(); setIsPreviewOpen(false); }}
               className="absolute top-4 right-4 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/80 transition-all font-bold text-xl"
@@ -254,9 +250,9 @@ export default function EventDashboard() {
       <div className="max-w-2xl mx-auto pt-10">
         
         <div className="mb-8 flex justify-between items-start">
-          <div className="w-full mr-4">
+          <div className="w-full mr-4 flex flex-col items-center">
             {isEditing ? (
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 w-full">
                 <input type="text" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} 
                   className={`text-3xl font-bold w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} />
                 
@@ -317,17 +313,16 @@ export default function EventDashboard() {
               </div>
             ) : (
               <>
-                {/* 👇 МИНИАТЮРНАЯ ОТКРЫТКА ВМЕСТО ТЕКСТА */}
+                {/* 👇 ИСПРАВЛЕННЫЙ БЛОК ПРЕДПРОСМОТРА (СТРОГО 3:4 И ПО ЦЕНТРУ) */}
                 <div 
                   onClick={() => { playClick(); setIsPreviewOpen(true); }}
-                  className="relative w-full h-48 rounded-2xl overflow-hidden cursor-pointer group shadow-xl border border-black/10 transition-transform hover:scale-[1.02]"
+                  className="relative w-full max-w-[260px] aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer group shadow-xl border border-black/10 transition-transform hover:scale-[1.02] mb-4"
                 >
                   {event.coverImage && (
                     <img src={event.coverImage} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />
                   )}
                   <div className={`absolute inset-0 bg-gradient-to-t ${overlayGradient} opacity-80`}></div>
                   
-                  {/* Мини-версия текста */}
                   <div 
                     className="absolute flex flex-col w-[85%]"
                     style={{ 
@@ -338,36 +333,34 @@ export default function EventDashboard() {
                     }}
                   >
                     <h1 
-                      className="text-2xl font-bold mb-1 drop-shadow-md text-center leading-tight line-clamp-2"
+                      className="text-xl font-bold mb-1 drop-shadow-md text-center leading-tight line-clamp-3"
                       style={{ color: event.textColor || '#ffffff' }}
                     >
                       {event.title}
                     </h1>
                     <p 
-                      className="text-xs text-center opacity-90 drop-shadow-sm"
+                      className="text-[10px] text-center opacity-90 drop-shadow-sm"
                       style={{ color: event.textColor || '#ffffff' }}
                     >
                       📅 {new Date(event.dateTime).toLocaleString('ru-RU')}
                     </p>
                   </div>
 
-                  {/* Оверлей при наведении */}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="text-white font-medium text-sm bg-black/50 px-4 py-2 rounded-full backdrop-blur-sm">
-                      🔍 Посмотреть открытку
+                    <span className="text-white font-medium text-xs bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                      🔍 Открыть
                     </span>
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between">
-                  <div>
-                    <p className={s.textMuted}>📍 {event.location || 'Место не указано'}</p>
-                    {event.description && <p className={`mt-1 text-sm opacity-80 ${s.textMuted} line-clamp-2`}>{event.description}</p>}
-                  </div>
+                <div className="text-center w-full">
+                  <p className={`text-sm font-medium ${s.textMuted}`}>📍 {event.location || 'Место не указано'}</p>
+                  {event.description && <p className={`mt-1 text-sm opacity-80 ${s.textMuted} line-clamp-2 max-w-sm mx-auto`}>{event.description}</p>}
+                  
                   <button onClick={() => { playClick(); setIsEditing(true); }} 
-                    className={`p-2 text-lg leading-none rounded-full border transition-all shadow-sm active:scale-95 ${s.btnSecondary} flex-shrink-0 ml-4`}
+                    className={`mt-4 px-6 py-2 text-sm font-semibold rounded-full border transition-all shadow-sm active:scale-95 ${s.btnSecondary}`}
                   >
-                    ✏️
+                    ✏️ Редактировать
                   </button>
                 </div>
               </>
