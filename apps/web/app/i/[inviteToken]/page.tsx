@@ -1,3 +1,91 @@
+import RsvpButtons from './RsvpButtons';
+import type { Metadata, ResolvingMetadata } from 'next';
+
+// 1. Функция получения данных
+async function getEventData(inviteToken: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/i/${inviteToken}`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+type Props = {
+  params: Promise<{ inviteToken: string }>
+};
+
+// 2. Генерация превью для мессенджеров
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const { inviteToken } = await params;
+  const cleanToken = inviteToken.split(/[^a-zA-Z0-9]/)[0];
+  const data = await getEventData(cleanToken);
+
+  if (!data) return { title: 'Приглашение не найдено | Зови' };
+
+  const { event } = data;
+  const formattedDate = new Date(event.dateTime).toLocaleString('ru-RU');
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bsbt-d92r-y79f.gw-1a.dockhost.net';
+  const ogImageUrl = event.coverImage ? `${baseUrl}${event.coverImage}` : `${baseUrl}/og-image.png`;
+
+  return {
+    title: `${event.title} — Приглашение | Зови`,
+    description: `📅 ${formattedDate}${event.location ? ` · 📍 ${event.location}` : ''}. Подтвердите участие!`,
+    openGraph: {
+      title: event.title,
+      description: `Приглашение на мероприятие. Ждем вас!`,
+      type: 'website',
+      siteName: 'Зови',
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: event.title }],
+    },
+  };
+}
+
+// 3. Основной компонент страницы
+export default async function InvitePage({ params }: Props) {
+  const { inviteToken } = await params;
+  const cleanToken = inviteToken.split(/[^a-zA-Z0-9]/)[0]; 
+  const data = await getEventData(cleanToken);
+
+  if (!data) {
+    return (
+      <main className="min-h-[100dvh] bg-gray-900 text-white flex items-center justify-center font-sans p-6">
+        <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-3xl text-center shadow-2xl">
+          <h1 className="text-3xl font-bold mb-2">Приглашение не найдено 😢</h1>
+        </div>
+      </main>
+    );
+  }
+
+  const { event, guests } = data;
+
+  const fontMap: Record<string, string> = {
+    'Montserrat': 'var(--font-montserrat)',
+    'Playfair Display': 'var(--font-playfair)',
+    'Great Vibes': 'var(--font-great-vibes)',
+    'Caveat': 'var(--font-caveat)',
+    'Oswald': 'var(--font-oswald)',
+    'Literata': 'var(--font-literata)',
+    'Poiret One': 'var(--font-poiret)',
+  };
+
+  const currentFont = fontMap[event.fontFamily] || fontMap['Great Vibes'];
+
+  const themes: Record<string, any> = {
+    classic: { bg: "bg-[#0a0a0a] text-white", sheet: "bg-[#1a1a1a]/95 border-t border-white/10", textMuted: "text-gray-400" },
+    light: { bg: "bg-gray-100 text-gray-900", sheet: "bg-white/95 border-t border-gray-200", textMuted: "text-gray-600" },
+    kids: { bg: "bg-[#fef08a] text-indigo-900", sheet: "bg-white/95 border-t border-white/50", textMuted: "text-indigo-700" }
+  };
+  const theme = themes[event.templateId] || themes.kids;
+
+  const isDarkText = ['#000000', '#111827', '#312e81', '#3730a3'].includes(event.textColor?.toLowerCase());
+  const overlayGradient = isDarkText 
+    ? 'from-white/90 via-white/40 to-transparent' 
+    : 'from-black/90 via-black/40 to-transparent';
+
+  // 4. Возврат JSX
   return (
     <main className={`min-h-[100dvh] flex flex-col items-center justify-center p-4 font-sans ${theme.bg}`}>
       
@@ -63,3 +151,4 @@
       </div>
     </main>
   );
+}
