@@ -4,7 +4,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { playClick } from '../../utils/sound';
 import { useTheme } from '../../context/ThemeContext';
-import PreviewCard from '../../components/PreviewCard'; // 👈 Импорт перетаскивания
+import PreviewCard from '../../components/PreviewCard';
+import CoverPicker from '../../components/CoverPicker'; // 👈 НОВЫЙ ИМПОРТ
 
 const FONT_OPTIONS = [
   { name: 'Montserrat', var: 'var(--font-montserrat)' },
@@ -33,10 +34,10 @@ export default function EventDashboard() {
     isEditingRef.current = isEditing;
   }, [isEditing]);
 
-  // 👇 Теперь в форме есть textX и textY
   const [editForm, setEditForm] = useState({ 
     title: '', dateTime: '', location: '', description: '', 
-    coverImage: '', textColor: '#ffffff', fontFamily: 'Great Vibes',
+    coverImage: '/covers/business/Business-001.jpg', // 👈 НОВАЯ ДЕФОЛТНАЯ ОБЛОЖКА
+    textColor: '#ffffff', fontFamily: 'Great Vibes',
     textX: 50, textY: 50
   });
   
@@ -69,10 +70,10 @@ export default function EventDashboard() {
             dateTime: new Date(json.event.dateTime).toISOString().slice(0, 16),
             location: json.event.location || '',
             description: json.event.description || '',
-            coverImage: json.event.coverImage || '/covers/cover1.jpg',
+            coverImage: json.event.coverImage || '/covers/business/Business-001.jpg', // 👈 НОВАЯ ДЕФОЛТНАЯ
             textColor: json.event.textColor || '#ffffff',
             fontFamily: json.event.fontFamily || 'Great Vibes',
-            textX: json.event.textX ?? 50, // 👈 Загружаем координаты из БД
+            textX: json.event.textX ?? 50,
             textY: json.event.textY ?? 50
           });
         }
@@ -197,7 +198,6 @@ export default function EventDashboard() {
                 <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} 
                   className={`w-full border rounded-xl px-3 py-2 focus:outline-none ${s.input}`} placeholder="Описание (дресс-код, тема и т.д.)" rows={2} />
 
-                {/* 👇 ЖИВОЙ ПРЕДПРОСМОТР С ПЕРЕТАСКИВАНИЕМ ПРИ РЕДАКТИРОВАНИИ 👇 */}
                 <PreviewCard 
                   title={editForm.title}
                   dateTime={editForm.dateTime}
@@ -211,18 +211,11 @@ export default function EventDashboard() {
                   onPositionChange={(x: number, y: number) => setEditForm({ ...editForm, textX: x, textY: y })}
                 />
 
-                <div className="bg-black/5 p-4 rounded-xl border border-black/10 mt-2">
-                  <label className="text-sm opacity-70 mb-3 block">Выберите обложку</label>
-                  <div className="flex gap-3 overflow-x-auto pb-2">
-                    {[1, 2, 3, 4].map(num => {
-                      const url = `/covers/cover${num}.jpg`;
-                      return (
-                        <img key={num} src={url} alt={`Cover ${num}`} onClick={() => { playClick(); setEditForm({...editForm, coverImage: url}); }}
-                          className={`w-16 h-16 object-cover rounded-xl cursor-pointer border-2 transition-all flex-shrink-0 ${editForm.coverImage === url ? 'border-indigo-500 scale-105 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'}`} />
-                      );
-                    })}
-                  </div>
-                </div>
+                {/* 👇 НОВЫЙ КОМПОНЕНТ С КАТЕГОРИЯМИ */}
+                <CoverPicker 
+                  value={editForm.coverImage} 
+                  onChange={(url) => setEditForm({ ...editForm, coverImage: url })} 
+                />
 
                 <div className="bg-black/5 p-4 rounded-xl border border-black/10">
                   <label className="text-sm opacity-70 mb-4 block">Настройки текста</label>
