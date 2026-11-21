@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { playClick } from '../utils/sound';
 import { useTheme } from '../context/ThemeContext';
 import PreviewCard from '../components/PreviewCard';
+import CoverPicker from '../components/CoverPicker'; // 👈 Импорт
 
 const FONT_OPTIONS = [
   { name: 'Montserrat', var: 'var(--font-montserrat)' },
@@ -23,7 +24,7 @@ export default function CreateEventPage() {
   
   const [form, setForm] = useState({ 
     title: '', dateTime: '', location: '', description: '',
-    coverImage: '/covers/cover1.jpg',
+    coverImage: '/covers/business/Business-001.jpg', // 👈 Новая дефолтная обложка
     textColor: '#ffffff',
     fontFamily: 'Great Vibes',
     textX: 50,
@@ -80,7 +81,6 @@ export default function CreateEventPage() {
             <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})} className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} placeholder="Кафе" />
           </div>
 
-          {/* 👇 НОВОЕ ПОЛЕ: ОПИСАНИЕ */}
           <div>
             <label className="text-sm opacity-70">Описание (дресс-код, тема и т.д.)</label>
             <textarea 
@@ -92,7 +92,7 @@ export default function CreateEventPage() {
             />
           </div>
 
-          {/* ЖИВОЙ ПРЕДПРОСМОТР С ПЕРЕТАСКИВАНИЕМ */}
+          {/* ЖИВОЙ ПРЕДПРОСМОТР */}
           <PreviewCard 
             title={form.title}
             dateTime={form.dateTime}
@@ -106,18 +106,11 @@ export default function CreateEventPage() {
             onPositionChange={(x: number, y: number) => setForm({ ...form, textX: x, textY: y })}
           />
 
-          <div className="bg-black/5 p-4 rounded-xl border border-black/10">
-            <label className="text-sm opacity-70 mb-3 block">Выберите обложку</label>
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {[1, 2, 3, 4].map(num => {
-                const url = `/covers/cover${num}.jpg`;
-                return (
-                  <img key={num} src={url} alt={`Cover ${num}`} onClick={() => { playClick(); setForm({...form, coverImage: url}); }}
-                    className={`w-16 h-16 object-cover rounded-xl cursor-pointer border-2 transition-all flex-shrink-0 ${form.coverImage === url ? 'border-indigo-500 scale-105 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'}`} />
-                );
-              })}
-            </div>
-          </div>
+          {/* 👇 НОВЫЙ КОМПОНЕНТ ВЫБОРА ОБЛОЖКИ */}
+          <CoverPicker 
+            value={form.coverImage} 
+            onChange={(url) => setForm({ ...form, coverImage: url })} 
+          />
 
           <div className="bg-black/5 p-4 rounded-xl border border-black/10">
             <label className="text-sm opacity-70 mb-4 block">Настройки текста</label>
