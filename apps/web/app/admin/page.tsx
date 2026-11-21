@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { playClick } from '../utils/sound';
 import { useTheme } from '../context/ThemeContext';
 import PreviewCard from '../components/PreviewCard';
-import CoverPicker from '../components/CoverPicker'; // 👈 Импорт
+import CoverPicker from '../components/CoverPicker';
 
 const FONT_OPTIONS = [
   { name: 'Montserrat', var: 'var(--font-montserrat)' },
@@ -22,14 +23,25 @@ export default function CreateEventPage() {
   const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   
+  // Состояние для списка сохраненных событий
+  const [savedEvents, setSavedEvents] = useState<any[]>([]);
+
   const [form, setForm] = useState({ 
     title: '', dateTime: '', location: '', description: '',
-    coverImage: '/covers/business/Business-001.jpg', // 👈 Новая дефолтная обложка
+    coverImage: '/covers/business/Business-001.jpg',
     textColor: '#ffffff',
     fontFamily: 'Great Vibes',
     textX: 50,
     textY: 50
   });
+
+  // При загрузке страницы читаем список событий из памяти
+  useEffect(() => {
+    const saved = localStorage.getItem('saved_events');
+    if (saved) {
+      try { setSavedEvents(JSON.parse(saved)); } catch (e) {}
+    }
+  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +56,21 @@ export default function CreateEventPage() {
       
       if (res.ok) {
         const data = await res.json();
+        
+        // 1. Сохраняем токен для доступа к конкретному событию
         localStorage.setItem(`admin_token_${data.event.id}`, data.adminToken);
+        
+        // 2. Добавляем событие в общий список "Мои события"
+        const newEventInfo = {
+          id: data.event.id,
+          title: data.event.title,
+          dateTime: data.event.dateTime,
+          adminToken: data.adminToken
+        };
+        const updatedEvents = [...savedEvents, newEventInfo];
+        setSavedEvents(updatedEvents);
+        localStorage.setItem('saved_events', JSON.stringify(updatedEvents));
+        
         router.push(`/admin/${data.event.id}`);
       } else alert('Ошибка при создании');
     } catch (error) { alert('Ошибка сети'); }
@@ -61,7 +87,40 @@ export default function CreateEventPage() {
   return (
     <main className={`min-h-screen p-6 flex items-center justify-center font-sans transition-colors duration-500 ${s.bg}`}>
       <div className={`w-full max-w-md backdrop-blur-xl border rounded-3xl p-6 sm:p-8 shadow-2xl transition-all duration-500 ${s.card}`}>
-        <h1 className="text-3xl font-bold mb-6 tracking-tight">Создать событие</h1>
+        
+        {/* БЛОК МОИХ СОБЫТИЙ */}
+        {savedEvents.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold mb-4">Мои события</h2>
+            <div className="flex flex-col gap-3">
+              {savedEvents.map(ev => (
+                <div key={ev.id} className={`p-4 rounded-xl border flex justify-between items-center ${s.card}`}>
+                  <div className="flex-1 mr-2">
+                    <h3 className="font-bold text-lg leading-tight truncate">{ev.title}</h3>
+                    <p className="text-xs opacity-70 mt-1">📅 {new Date(ev.dateTime).toLocaleString('ru-RU')}</p>
+                  </div>
+                  <Link 
+                    href={`/admin/${ev.id}`} 
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${s.btn}`}
+                  >
+                    Управлять
+                  </Link>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex items-center gap-4 my-8 opacity-20">
+              <hr className="flex-1 border-current" />
+              <span className="text-xs uppercase tracking-widest">или</span>
+              <hr className="flex-1 border-current" />
+            </div>
+          </div>
+        )}
+
+        {/* ФОРМА СОЗДАНИЯ */}
+        <h1 className="text-3xl font-bold mb-6 tracking-tight">
+          {savedEvents.length > 0 ? 'Создать новое' : 'Создать событие'}
+        </h1>
         
         <form onSubmit={handleCreate} className="flex flex-col gap-5">
           <div>
@@ -87,12 +146,11 @@ export default function CreateEventPage() {
               value={form.description} 
               onChange={e => setForm({...form, description: e.target.value})} 
               className={`w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none transition-colors ${s.input}`} 
-              placeholder="Например: Дресс-код — все в белом. Тема — Гэтсби." 
+              placeholder="Например: Дресс-код — все в белом." 
               rows={3}
             />
           </div>
 
-          {/* ЖИВОЙ ПРЕДПРОСМОТР */}
           <PreviewCard 
             title={form.title}
             dateTime={form.dateTime}
@@ -106,7 +164,6 @@ export default function CreateEventPage() {
             onPositionChange={(x: number, y: number) => setForm({ ...form, textX: x, textY: y })}
           />
 
-          {/* 👇 НОВЫЙ КОМПОНЕНТ ВЫБОРА ОБЛОЖКИ */}
           <CoverPicker 
             value={form.coverImage} 
             onChange={(url) => setForm({ ...form, coverImage: url })} 
