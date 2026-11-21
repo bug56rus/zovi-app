@@ -69,7 +69,7 @@ export default function PreviewCard({
       
       <div 
         ref={cardRef}
-        className="relative w-full h-[320px] rounded-2xl overflow-hidden shadow-xl border border-black/10 select-none touch-none bg-gray-100"
+        className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-xl border border-black/10 select-none touch-none bg-gray-100"
       >
         {coverImage ? (
           <img src={coverImage} alt="Cover" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
