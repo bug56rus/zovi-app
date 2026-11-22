@@ -22,11 +22,6 @@ export default function PreviewCard({
   
   const currentFont = fontMap[fontFamily] || fontMap['Great Vibes'];
 
-  const isDarkText = ['#000000', '#111827', '#312e81', '#3730a3'].includes(textColor?.toLowerCase());
-  const overlayGradient = isDarkText 
-    ? 'from-white/90 via-white/50 to-transparent' 
-    : 'from-black/90 via-black/50 to-transparent';
-
   let displayDate = 'Дата не выбрана';
   if (dateTime) {
     try {
@@ -70,8 +65,8 @@ export default function PreviewCard({
         ) : (
           <div className="absolute inset-0 bg-gray-300 pointer-events-none" />
         )}
-        
-        <div className={`absolute inset-0 bg-gradient-to-t ${overlayGradient} opacity-80 pointer-events-none`}></div>
+
+        {/* УБРАН ГРАДИЕНТ (ЗАТЕМНЕНИЕ) */}
 
         <div 
           className={`
@@ -104,7 +99,6 @@ export default function PreviewCard({
             {title || 'Название'}
           </h1>
           
-          {/* Убран 📅 */}
           <div 
             className="space-y-[1.5cqw] text-[7cqw] font-medium drop-shadow-sm opacity-90 text-center pointer-events-none"
             style={{ color: textColor || '#ffffff' }}

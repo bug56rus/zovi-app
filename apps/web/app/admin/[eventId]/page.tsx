@@ -151,8 +151,6 @@ export default function EventDashboard() {
   const maybeCount = invites.filter((i: any) => i.status === 'maybe').length;
 
   const currentFont = fontMap[event.fontFamily] || fontMap['Great Vibes'];
-  const isDarkText = ['#000000', '#111827', '#312e81', '#3730a3'].includes(event.textColor?.toLowerCase());
-  const overlayGradient = isDarkText ? 'from-white/90 via-white/50 to-transparent' : 'from-black/90 via-black/50 to-transparent';
 
   return (
     <main className={`min-h-screen p-6 font-sans transition-colors duration-500 ${s.bg}`}>
@@ -161,11 +159,11 @@ export default function EventDashboard() {
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4" onClick={() => { playClick(); setIsPreviewOpen(false); }}>
           <div style={{ containerType: 'inline-size' }} className="relative w-full max-w-md aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl border border-white/20" onClick={(e) => e.stopPropagation()}>
             {event.coverImage && <img src={event.coverImage} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />}
-            <div className={`absolute inset-0 bg-gradient-to-t ${overlayGradient} opacity-80 pointer-events-none`}></div>
             
+            {/* УБРАН ГРАДИЕНТ (ЗАТЕМНЕНИЕ) В МОДАЛКЕ */}
+
             <div className="absolute flex flex-col w-[85%]" style={{ left: `${event.textX || 50}%`, top: `${event.textY || 50}%`, transform: 'translate(-50%, -50%)', fontFamily: currentFont }}>
               <h1 className="text-[8cqw] font-bold mb-[1.5cqw] tracking-tight drop-shadow-md text-center leading-tight" style={{ color: event.textColor || '#ffffff' }}>{event.title}</h1>
-              {/* Убран 📅 здесь */}
               <div className="space-y-[1.5cqw] text-[7cqw] font-medium drop-shadow-sm text-center" style={{ color: event.textColor || '#ffffff', opacity: 0.9 }}>
                 <p>{new Date(event.dateTime).toLocaleString('ru-RU')}</p>
                 {event.location && <p>📍 {event.location}</p>}
@@ -227,10 +225,11 @@ export default function EventDashboard() {
                 <div onClick={() => { playClick(); setIsPreviewOpen(true); }} style={{ containerType: 'inline-size' }}
                   className="relative w-full max-w-[260px] aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer group shadow-xl border border-black/10 transition-transform hover:scale-[1.02] mb-4">
                   {event.coverImage && <img src={event.coverImage} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />}
-                  <div className={`absolute inset-0 bg-gradient-to-t ${overlayGradient} opacity-80`}></div>
+                  
+                  {/* УБРАН ГРАДИЕНТ (ЗАТЕМНЕНИЕ) В МИНИАТЮРЕ */}
+                  
                   <div className="absolute flex flex-col w-[85%]" style={{ left: `${event.textX || 50}%`, top: `${event.textY || 50}%`, transform: 'translate(-50%, -50%)', fontFamily: currentFont }}>
                     <h1 className="text-[8cqw] font-bold mb-[1.5cqw] drop-shadow-md text-center leading-tight line-clamp-3" style={{ color: event.textColor || '#ffffff' }}>{event.title}</h1>
-                    {/* Убран 📅 здесь */}
                     <p className="text-[7cqw] text-center opacity-90 drop-shadow-sm mt-[1.5cqw]" style={{ color: event.textColor || '#ffffff' }}>
                       {new Date(event.dateTime).toLocaleString('ru-RU')}
                     </p>

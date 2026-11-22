@@ -56,21 +56,18 @@ export default async function InvitePage({ params }: Props) {
   };
   const theme = themes[event.templateId] || themes.kids;
 
-  const isDarkText = ['#000000', '#111827', '#312e81', '#3730a3'].includes(event.textColor?.toLowerCase());
-  const overlayGradient = isDarkText ? 'from-white/90 via-white/40 to-transparent' : 'from-black/90 via-black/40 to-transparent';
-
   return (
     <main className={`min-h-[100dvh] flex flex-col items-center justify-center p-4 font-sans ${theme.bg}`}>
       <div style={{ containerType: 'inline-size' }} className="relative w-full max-w-md aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl border border-black/10">
         {event.coverImage && <img src={event.coverImage} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />}
-        <div className={`absolute inset-0 bg-gradient-to-t ${overlayGradient} opacity-80 pointer-events-none`}></div>
+        
+        {/* УБРАН ГРАДИЕНТ (ЗАТЕМНЕНИЕ) */}
 
         <div className="absolute flex flex-col w-[85%]" style={{ left: `${event.textX ?? 50}%`, top: `${event.textY ?? 50}%`, transform: 'translate(-50%, -50%)', fontFamily: currentFont }}>
           <h1 className="text-[8cqw] font-bold mb-[1.5cqw] tracking-tight drop-shadow-lg text-center leading-tight" style={{ color: event.textColor || '#ffffff' }}>
             {event.title}
           </h1>
           
-          {/* Убран 📅 */}
           <div className="space-y-[1.5cqw] text-[7cqw] font-medium drop-shadow-md text-center" style={{ color: event.textColor || '#ffffff', opacity: 0.95 }}>
             <p>{new Date(event.dateTime).toLocaleString('ru-RU')}</p>
             {event.location && <p>📍 {event.location}</p>}
@@ -99,7 +96,6 @@ export default async function InvitePage({ params }: Props) {
         )}
       </div>
 
-      {/* 👇 ССЫЛКА НА АДМИНКУ ДЛЯ ГОСТЕЙ */}
       <div className="mt-8 mb-4 text-center">
         <a href="/admin" className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border transition-all hover:scale-105 active:scale-95 ${theme.sheet}`}>
           <span className="text-base">✨</span>
