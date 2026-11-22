@@ -27,7 +27,7 @@ export default function CreateEventPage() {
 
   const [form, setForm] = useState({ 
     title: '', dateTime: '', location: '', description: '',
-    coverImage: '/covers/business/Business-001.jpg',
+    coverImage: '/covers/party/Party-001.jpg',
     textColor: '#ffffff',
     fontFamily: 'Great Vibes',
     textX: 50,

@@ -42,13 +42,10 @@ export default function PreviewCard({
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging || !cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
-    
     let newX = (textX || 50) + (e.movementX / rect.width) * 100;
     let newY = (textY || 50) + (e.movementY / rect.height) * 100;
-    
     newX = Math.max(10, Math.min(90, newX));
     newY = Math.max(10, Math.min(90, newY));
-
     onPositionChange(newX, newY);
   };
 
@@ -107,12 +104,12 @@ export default function PreviewCard({
             {title || 'Название'}
           </h1>
           
-          {/* УВЕЛИЧЕННЫЙ ШРИФТ ДЛЯ ДАТЫ, МЕСТА И ОПИСАНИЯ */}
+          {/* Убран 📅 */}
           <div 
             className="space-y-[1.5cqw] text-[7cqw] font-medium drop-shadow-sm opacity-90 text-center pointer-events-none"
             style={{ color: textColor || '#ffffff' }}
           >
-            <p>📅 {displayDate}</p>
+            <p>{displayDate}</p>
             {location && <p>📍 {location}</p>}
             {description && <p className="mt-[1.5cqw] text-[6cqw] opacity-80 leading-tight">{description}</p>}
           </div>
