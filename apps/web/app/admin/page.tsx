@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { playClick } from '../utils/sound'; // 👈 ОДНА ТОЧКА
-import { useTheme } from '../context/ThemeContext'; // 👈 ОДНА ТОЧКА
-import PreviewCard from '../components/PreviewCard'; // 👈 ОДНА ТОЧКА
-import CoverPicker from '../components/CoverPicker'; // 👈 ОДНА ТОЧКА
+import { playClick } from '../utils/sound';
+import { useTheme } from '../context/ThemeContext';
+import PreviewCard from '../components/PreviewCard';
+import CoverPicker from '../components/CoverPicker';
 
 const FONT_OPTIONS = [
   { name: 'Montserrat', var: 'var(--font-montserrat)' },
@@ -84,22 +84,30 @@ export default function CreateEventPage() {
     <main className={`min-h-screen p-6 flex items-center justify-center font-sans transition-colors duration-500 ${s.bg}`}>
       <div className={`w-full max-w-md backdrop-blur-xl border rounded-3xl p-6 sm:p-8 shadow-2xl transition-all duration-500 ${s.card}`}>
         
+        {/* БЛОК МОИХ СОБЫТИЙ */}
         {savedEvents.length > 0 && (
           <div className="mb-10">
             <h2 className="text-2xl font-bold mb-4">Мои события</h2>
             <div className="flex flex-col gap-3">
               {savedEvents.map(ev => (
                 <div key={ev.id} className={`p-4 rounded-xl border flex justify-between items-center ${s.card}`}>
-                  <div className="flex-1 mr-2">
+                  
+                  {/* 👇 ДОБАВЛЕН min-w-0 ДЛЯ ТЕКСТА, ЧТОБЫ ОН ОБРЕЗАЛСЯ */}
+                  <div className="flex-1 min-w-0 mr-3">
                     <h3 className="font-bold text-lg leading-tight truncate">{ev.title}</h3>
-                    <p className="text-xs opacity-70 mt-1">📅 {new Date(ev.dateTime).toLocaleString('ru-RU')}</p>
+                    <p className="text-xs opacity-70 mt-1 truncate">
+                      📅 {new Date(ev.dateTime).toLocaleString('ru-RU')}
+                    </p>
                   </div>
+                  
+                  {/* 👇 ДОБАВЛЕН flex-shrink-0 ДЛЯ КНОПКИ, ЧТОБЫ ОНА НЕ СЖИМАЛАСЬ */}
                   <Link 
                     href={`/admin/${ev.id}`} 
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${s.btn}`}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap flex-shrink-0 ${s.btn}`}
                   >
                     Управлять
                   </Link>
+                  
                 </div>
               ))}
             </div>
@@ -112,6 +120,7 @@ export default function CreateEventPage() {
           </div>
         )}
 
+        {/* ФОРМА СОЗДАНИЯ */}
         <h1 className="text-3xl font-bold mb-6 tracking-tight">
           {savedEvents.length > 0 ? 'Создать новое' : 'Создать событие'}
         </h1>
