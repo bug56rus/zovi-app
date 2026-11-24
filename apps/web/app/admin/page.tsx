@@ -8,6 +8,8 @@ import { useTheme } from '../context/ThemeContext';
 import PreviewCard from '../components/PreviewCard';
 import CoverPicker from '../components/CoverPicker';
 
+const MAX_EVENTS = 5; // 👈 Максимальное количество событий
+
 const FONT_OPTIONS = [
   { name: 'Montserrat', var: 'var(--font-montserrat)' },
   { name: 'Playfair Display', var: 'var(--font-playfair)' },
@@ -41,9 +43,26 @@ export default function CreateEventPage() {
     }
   }, []);
 
+  const deleteSavedEvent = (eventId: string) => {
+    if (!confirm('Удалить событие из списка? Вы потеряете быстрый доступ к управлению этим событием (само событие на сервере останется, если у вас сохранена прямая ссылка).')) return;
+    playClick();
+    const updatedEvents = savedEvents.filter(ev => ev.id !== eventId);
+    setSavedEvents(updatedEvents);
+    localStorage.setItem('saved_events', JSON.stringify(updatedEvents));
+    localStorage.removeItem(`admin_token_${eventId}`);
+    localStorage.removeItem(`guest_names_${eventId}`);
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     playClick();
+
+    // 👇 Проверка лимита
+    if (savedEvents.length >= MAX_EVENTS) {
+      alert(`Достигнут лимит — ${MAX_EVENTS} событий. Удалите одно из старых, чтобы сохранить новое.`);
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`, {
@@ -80,6 +99,8 @@ export default function CreateEventPage() {
   };
   const s = styles[theme as keyof typeof styles] || styles.kids;
 
+  const isLimitReached = savedEvents.length >= MAX_EVENTS;
+
   return (
     <main className={`min-h-screen p-6 flex items-center justify-center font-sans transition-colors duration-500 ${s.bg}`}>
       <div className={`w-full max-w-md backdrop-blur-xl border rounded-3xl p-6 sm:p-8 shadow-2xl transition-all duration-500 ${s.card}`}>
@@ -87,27 +108,42 @@ export default function CreateEventPage() {
         {/* БЛОК МОИХ СОБЫТИЙ */}
         {savedEvents.length > 0 && (
           <div className="mb-10">
-            <h2 className="text-2xl font-bold mb-4">Мои события</h2>
+            <h2 className="text-2xl font-bold mb-4">
+              Мои события <span className={`text-base font-normal opacity-60`}>({savedEvents.length}/{MAX_EVENTS})</span>
+            </h2>
+
+            {/* 👇 ПРЕДУПРЕЖДЕНИЕ О ЛИМИТЕ */}
+            {isLimitReached && (
+              <div className="bg-red-500/20 border border-red-500/50 p-3 rounded-xl mb-3 text-sm font-medium">
+                ⚠️ Достигнут лимит событий. Удалите одно из старых, чтобы создать новое.
+              </div>
+            )}
+
             <div className="flex flex-col gap-3">
               {savedEvents.map(ev => (
                 <div key={ev.id} className={`p-4 rounded-xl border flex justify-between items-center ${s.card}`}>
-                  
-                  {/* 👇 ДОБАВЛЕН min-w-0 ДЛЯ ТЕКСТА, ЧТОБЫ ОН ОБРЕЗАЛСЯ */}
                   <div className="flex-1 min-w-0 mr-3">
                     <h3 className="font-bold text-lg leading-tight truncate">{ev.title}</h3>
                     <p className="text-xs opacity-70 mt-1 truncate">
                       📅 {new Date(ev.dateTime).toLocaleString('ru-RU')}
                     </p>
                   </div>
-                  
-                  {/* 👇 ДОБАВЛЕН flex-shrink-0 ДЛЯ КНОПКИ, ЧТОБЫ ОНА НЕ СЖИМАЛАСЬ */}
-                  <Link 
-                    href={`/admin/${ev.id}`} 
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap flex-shrink-0 ${s.btn}`}
-                  >
-                    Управлять
-                  </Link>
-                  
+                  <div className="flex gap-2 flex-shrink-0">
+                    <Link 
+                      href={`/admin/${ev.id}`} 
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${s.btn}`}
+                    >
+                      Управлять
+                    </Link>
+                    {/* 👇 КНОПКА УДАЛЕНИЯ */}
+                    <button
+                      onClick={() => deleteSavedEvent(ev.id)}
+                      className="px-3 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/40 transition-all active:scale-95 font-medium text-sm"
+                      title="Удалить из списка"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -194,8 +230,15 @@ export default function CreateEventPage() {
             </div>
           </div>
 
-          <button type="submit" disabled={loading} className={`mt-2 w-full py-4 font-semibold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg ${s.btn}`}>
-            {loading ? 'Создаем...' : 'Создать и перейти к гостям'}
+          {/* 👇 КНОПКА С ПРЕДУПРЕЖДЕНИЕМ */}
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className={`mt-2 w-full py-4 font-semibold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg ${
+              isLimitReached ? 'bg-gray-400 text-gray-700 cursor-not-allowed' : s.btn
+            }`}
+          >
+            {loading ? 'Создаем...' : (isLimitReached ? '⚠️ Лимит событий исчерпан' : 'Создать и перейти к гостям')}
           </button>
         </form>
       </div>
