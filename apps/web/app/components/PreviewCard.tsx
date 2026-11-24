@@ -94,7 +94,7 @@ export default function PreviewCard({
 
           <h1 
             className="text-[8cqw] font-bold mb-[1.5cqw] drop-shadow-md leading-tight text-center pointer-events-none"
-            style={{ color: textColor || '#ffffff' }}
+            style={{ color: textColor || '#000000' }}
           >
             {title || 'Название'}
           </h1>

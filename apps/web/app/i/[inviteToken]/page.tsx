@@ -64,7 +64,7 @@ export default async function InvitePage({ params }: Props) {
         {/* УБРАН ГРАДИЕНТ (ЗАТЕМНЕНИЕ) */}
 
         <div className="absolute flex flex-col w-[85%]" style={{ left: `${event.textX ?? 50}%`, top: `${event.textY ?? 50}%`, transform: 'translate(-50%, -50%)', fontFamily: currentFont }}>
-          <h1 className="text-[8cqw] font-bold mb-[1.5cqw] tracking-tight drop-shadow-lg text-center leading-tight" style={{ color: event.textColor || '#ffffff' }}>
+          <h1 className="text-[8cqw] font-bold mb-[1.5cqw] tracking-tight drop-shadow-lg text-center leading-tight" style={{ color: event.textColor || '#000000' }}>
             {event.title}
           </h1>
           

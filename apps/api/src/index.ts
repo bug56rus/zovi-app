@@ -43,7 +43,7 @@ app.post('/events', async (request, reply) => {
     showGuests: showGuests ?? true,
     coverImage: coverImage || null,
     coverPosition: coverPosition || 'center',
-    textColor: textColor || '#ffffff',
+    textColor: textColor || '#000000',
     fontFamily: fontFamily || 'Great Vibes',
     // 👇 ОКРУГЛЯЕМ ЗНАЧЕНИЯ ДО ЦЕЛЫХ ЧИСЕЛ
     textX: textX !== undefined ? Math.round(Number(textX)) : 50,

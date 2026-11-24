@@ -40,7 +40,7 @@ export default function EventDashboard() {
   const [editForm, setEditForm] = useState({ 
     title: '', dateTime: '', location: '', description: '', 
     coverImage: '/covers/party/Party-001.jpg',
-    textColor: '#ffffff', fontFamily: 'Great Vibes', textX: 50, textY: 50
+    textColor: '#000000', fontFamily: 'Great Vibes', textX: 50, textY: 50
   });
   
   const [localNames, setLocalNames] = useState<Record<string, string>>({});
@@ -65,7 +65,7 @@ export default function EventDashboard() {
             dateTime: new Date(json.event.dateTime).toISOString().slice(0, 16),
             location: json.event.location || '', description: json.event.description || '',
             coverImage: json.event.coverImage || '/covers/party/Party-001.jpg',
-            textColor: json.event.textColor || '#ffffff', fontFamily: json.event.fontFamily || 'Great Vibes',
+            textColor: json.event.textColor || '#000000', fontFamily: json.event.fontFamily || 'Great Vibes',
             textX: json.event.textX ?? 50, textY: json.event.textY ?? 50
           });
         }
@@ -163,7 +163,7 @@ export default function EventDashboard() {
             {/* УБРАН ГРАДИЕНТ (ЗАТЕМНЕНИЕ) В МОДАЛКЕ */}
 
             <div className="absolute flex flex-col w-[85%]" style={{ left: `${event.textX || 50}%`, top: `${event.textY || 50}%`, transform: 'translate(-50%, -50%)', fontFamily: currentFont }}>
-              <h1 className="text-[8cqw] font-bold mb-[1.5cqw] tracking-tight drop-shadow-md text-center leading-tight" style={{ color: event.textColor || '#ffffff' }}>{event.title}</h1>
+              <h1 className="text-[8cqw] font-bold mb-[1.5cqw] tracking-tight drop-shadow-md text-center leading-tight" style={{ color: event.textColor || '#000000' }}>{event.title}</h1>
               <div className="space-y-[1.5cqw] text-[7cqw] font-medium drop-shadow-sm text-center" style={{ color: event.textColor || '#ffffff', opacity: 0.9 }}>
                 <p>{new Date(event.dateTime).toLocaleString('ru-RU')}</p>
                 {event.location && <p>📍 {event.location}</p>}
