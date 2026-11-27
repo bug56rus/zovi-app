@@ -1,7 +1,5 @@
 import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 
 export async function GET(
   request: NextRequest,
@@ -28,9 +26,8 @@ export async function GET(
     const location = event.location || '';
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bsbt-d92r-y79f.gw-1a.dockhost.net';
 
-    // 👇 ЧИТАЕМ ШРИФТ ЛОКАЛЬНО (ЭТО РАБОТАЕТ МГНОВЕННО)
-    const fontPath = path.join(process.cwd(), 'apps/web/public/fonts/Montserrat-Bold.ttf');
-    const fontData = fs.readFileSync(fontPath);
+    // 👇 ЗАГРУЖАЕМ ШРИФТ ПО HTTP (надежнее, чем fs.readFileSync в Docker)
+    const fontData = await fetch(`${baseUrl}/fonts/Montserrat-Bold.ttf`).then(res => res.arrayBuffer());
 
     return new ImageResponse(
       (
@@ -54,7 +51,8 @@ export async function GET(
             </div>
             {location && (
               <div style={{ display: 'flex', fontSize: 36, color: '#a3a3a3' }}>
-                📍 {location}
+                {/* 👇 Убран эмодзи 📍, чтобы Satori не падал */}
+                {location}
               </div>
             )}
           </div>
@@ -71,6 +69,6 @@ export async function GET(
     );
   } catch (e: any) {
     console.error(e);
-    return new Response(`Failed to generate the image`, { status: 500 });
+    return new Response(`Failed to generate the image: ${e.message}`, { status: 500 });
   }
 }
